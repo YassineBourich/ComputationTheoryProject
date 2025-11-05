@@ -25,3 +25,4 @@ s = SymbolicModel(reachability, reachability_method, X, U, W, Nx , Nu)
 
 print(s.getSetOfSuccessors([7.5, 7.2], [9.9, 8.8]))
 print(s.g)
+print(s.Pre({11, 12, 13, 14, 15, 16, 17, 25, 26, 35, 36}))

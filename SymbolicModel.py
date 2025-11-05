@@ -91,3 +91,20 @@ class SymbolicModel:
             if f_min[i] <= self.discretisator.KSI.x_min[i]:
                 f_max[i] = self.discretisator.KSI.x_min[i]
         return f_min, f_max
+
+    # method to get predecessors of a set of states
+    def Pre(self, R: set):
+        predecessors = set()
+        for ksi in range(0, self.num_of_sym_states + 1):
+            if self.exists_sigma_st_ksi_is_pre(ksi, R):
+                predecessors.add(ksi)
+
+        return predecessors
+
+    # method to check if there is a command such that g(ksi, sigma) is in R (such that ksi
+    # is a predecessor)
+    def exists_sigma_st_ksi_is_pre(self, ksi: int, R: set):
+        for sigma in range(1, self.num_of_commands + 1):
+            if self.g[(ksi, sigma)] and self.g[(ksi, sigma)].issubset(R):
+                return True
+        return False
