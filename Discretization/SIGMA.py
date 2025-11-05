@@ -87,7 +87,7 @@ class SIGMA:
 
         # Calculating the central position of the command in its coordinates
         for n in range(self.dim_u):
-            partition_wide = (self.u_max[n] - self.u_min[n]) / self.Nu[n]
-            u.append(self.u_min[n] + partition_wide * (command_coords[n] + 1/2))
+            partition_width = (self.u_max[n] - self.u_min[n]) / self.Nu[n]
+            u.append(self.u_min[n] + partition_width * (command_coords[n] + 1/2))
 
         return u

@@ -1,6 +1,27 @@
-from Discretization.Discretizator import Discretizator
-from Discretization.SIGMA import SIGMA
+from SymbolicModel import SymbolicModel
+from Reachability.ReachabilityMethods import ReachabilityMethods
+from Reachability.Reachability import Reachability
+from ContinuousModels.Model_2D import TwoDimentionalModel
 
-s = SIGMA([1, 1], [11, 10], [10, 10])
+model = TwoDimentionalModel(0.1)
+reachability = Reachability(model)
+reachability_method = ReachabilityMethods.MonotonyBasedMethod
+X = [
+    [0, 0],
+    [10, 10]
+]
+U = [
+    [-1, 1],
+    [-1, 1]
+]
+W = [
+    [-1, 1],
+    [-1, 1]
+]
+Nx = [10, 10]
+Nu = [3, 3]
 
-print(s.p(5))
+s = SymbolicModel(reachability, reachability_method, X, U, W, Nx , Nu)
+
+print(s.getSetOfSuccessors([7.5, 7.2], [9.9, 8.8]))
+print(s.g)
