@@ -1,4 +1,4 @@
-from Math.Math import vec_add, vec_sub, vec_mul_scalar, mat_vec_mul
+from Math.Math import vec_add, vec_mul_scalar
 
 class TwoDimentionalModel:
     def __init__(self, tau):

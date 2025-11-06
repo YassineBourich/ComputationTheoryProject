@@ -21,8 +21,12 @@ class ReachabilityController:
         h = {}
         for k in range(len(self.R_list) - 1, -1, -1):
             for ksi in self.R_list[k]:
-                sigma = self.symb_model.sigma_st_g_ksi_sigma_is_in_R(ksi, self.R_list[k-1])
+                sigma = self.symb_model.sigma_st_g_ksi_sigma_is_in_R(ksi, self.R_list[k - 1])
                 if sigma:
-                    h[ksi] = sigma
+                    h[ksi] = list(sigma)[0]
+
+        for ksi in self.symb_model.getAllStates():
+            if ksi not in h:
+                h[ksi] = 1
 
         return h

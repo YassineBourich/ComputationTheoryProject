@@ -2,48 +2,74 @@ from SymbolicModels.SymbolicModel import SymbolicModel
 from Reachability.ReachabilityMethods import ReachabilityMethods
 from Reachability.Reachability import Reachability
 from ContinuousModels.Model_2D import TwoDimentionalModel
+from SymbolicControllers.AutomatonBasedController import AutomatonBasedController
+from SpecificationAutomata.ExampleSpecification import ExpambleSpecification
+from Concretisation.ConcreteModel import ConcreteModel
+from SymbolicControllers.SafetyController import SafetyController
+from SymbolicControllers.ReachabilityController import ReachabilityController
+from PlotingUtility import TrajectoryPloter
 
-
-model = TwoDimentionalModel(0.1)
-reachability = Reachability(model)
+continuous_sys = TwoDimentionalModel(0.1)
+reachability = Reachability(continuous_sys)
 reachability_method = ReachabilityMethods.MonotonyBasedMethod
 X = [
     [0, 0],
     [10, 10]
 ]
 U = [
-    [-1, 1],
-    [-1, 1]
+    [0.25, -1],
+    [1, 1]
 ]
 W = [
-    [-1, 1],
-    [-1, 1]
+    [-0.05, -0.05],
+    [0.05, 0.05]
 ]
-Nx = [10, 10]
+Nx = [100, 100]
 Nu = [3, 3]
 
-s = SymbolicModel(reachability, reachability_method, X, U, W, Nx , Nu)
+print("Constructing the symbolic model...")
+model = SymbolicModel(reachability, reachability_method, X, U, W, Nx , Nu)
+Qs = set()
+for ksi in range(51, model.discretisator.KSI.num_of_sym_states - 25):
+    Qs.add(ksi)
+c = SafetyController(model, Qs)
+#r = ReachabilityController(model, Qs)
 
-print(s.getSetOfSuccessors([7.5, 7.2], [9.9, 8.8]))
-print(s.g)
-print(s.Pre({11, 12, 13, 14, 15, 16, 17, 25, 26, 35, 36}))
+print(c.R_list)
+print(model.g)
 
+print("Defining the specification automaton...")
+#Automaton = ExpambleSpecification(model)
+print("Constructing the controller...")
+#AC = AutomatonBasedController(Automaton, model)
 
-from SymbolicControllers.ReachabilityController import ReachabilityController
+print("Concrete model: ")
+concrete_model = ConcreteModel(continuous_sys, c)
 
-c = ReachabilityController(s, {89, 90, 99, 100, 34, 35, 44, 45, 58, 59, 68, 69, 72, 61, 62, 71})
+ksi0 = 51
 
-print(c.h)
+def construct_trajectory(model, controller, ksi0):
+    S = [ksi0]
+    t = 0
+    #psi_init = controller.A.q0
+    #psi_t = psi_init
+    while t < 100:
+        print(S)
+        t += 1
+        #psi_t = controller.h1[(psi_t, S[-1])]
+        sigma_t = controller.h[S[-1]]
 
-from SymbolicControllers.AutomatonBasedController import AutomatonBasedController
-from SpecificationAutomata.ExampleSpecification import ExpambleSpecification
+        ksi_tp1 = model.get_next_state(S[-1], sigma_t)
+        print("ksi at " + str(t) + " is " + str(ksi_tp1))
+        S.append(ksi_tp1)
 
-A = ExpambleSpecification(s)
-AC = AutomatonBasedController(A, s)
+    return S
 
-print("=========================\nAutomaton Controller\n========================")
-print(AC.h1)
-print("=========================\n")
-print(AC.h2)
-print("=========================\n")
-print(AC.Q0)
+print("Running the program...")
+print(construct_trajectory(model, c, ksi0))
+
+w = (-0.02, 0.01)
+
+print(concrete_model.construct_trajectory(w, [0.2, 6.0]))
+
+TrajectoryPloter(concrete_model.trajectories[w])

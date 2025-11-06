@@ -46,7 +46,16 @@ class MutatedSymbolicModel:
 
     # method to return the command such that g(ksi_tield, sigma) is in R
     def sigma_st_g_ksi_sigma_is_in_R(self, ksi_tield, R: set):
+        sigma_set = set()
         for sigma in range(1, self.symb_model.num_of_commands + 1):
             if self.g_tield[(ksi_tield, sigma)] and self.g_tield[(ksi_tield, sigma)].issubset(R):
-                return sigma
-        return None
+                sigma_set.add(sigma)
+        return sigma_set
+
+    def getAllStates(self):
+        states = set()
+        for ksi in self.symb_model.getAllStates():
+            for psi in self.Automaton.Q:
+                states.add((psi, ksi))
+
+        return states

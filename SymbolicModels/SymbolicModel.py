@@ -54,19 +54,15 @@ class SymbolicModel:
             # If the reachable region is partially out of grid
             if (not vect_all_lte(f_max, self.discretisator.KSI.x_max)) or (not vect_all_lte(self.discretisator.KSI.x_min, f_min)):
                 f_min, f_max = self.crop_reachable_area(f_min, f_max)
-                include_x0 = 1
+                # include_x0 = 1
 
             min_index = self.discretisator.KSI.vectorToIndex(f_min)
             max_index = self.discretisator.KSI.vectorToIndex(f_max)
-
-            print(min_index)
-            print(max_index)
 
             successor = min_index.copy()
 
             while vect_all_lte(successor, max_index):
                 successors.append(successor.copy())
-                print("successor :" + str(successor))
                 successor[0] += 1
                 for i in range(len(successor) - 1):
                     if successor[i] > max_index[i]:
@@ -76,11 +72,10 @@ class SymbolicModel:
             for i in range(len(successors)):
                 successors[i] = self.discretisator.KSI.indexToPartition(successors[i])
 
-        successors = set(successors)
         if include_x0:
-            successors.add(0)
+            successors.append(0)
 
-        return successors
+        return set(successors)
 
     # method to crop the reachable area
     def crop_reachable_area(self, f_min, f_max):
@@ -111,7 +106,25 @@ class SymbolicModel:
 
     # method to return the command such that g(ksi, sigma) is in R
     def sigma_st_g_ksi_sigma_is_in_R(self, ksi: int, R: set):
+        sigma_set = set()
         for sigma in range(1, self.num_of_commands + 1):
             if self.g[(ksi, sigma)] and self.g[(ksi, sigma)].issubset(R):
-                return sigma
-        return None
+                sigma_set.add(sigma)
+        return sigma_set
+
+    def getAllStates(self):
+        return self.discretisator.KSI.getAllStates()
+
+    # method to return one symbolic state from a set
+    def get_next_state(self, ksi, sigma):
+        states = list(self.g[(ksi, sigma)])
+
+        print("next: " + str(states))
+
+        state = states[0]
+        for i in range(len(states)):
+            if states[i] != ksi:
+                state = states[i]
+                break
+
+        return state
