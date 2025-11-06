@@ -108,3 +108,10 @@ class SymbolicModel:
             if self.g[(ksi, sigma)] and self.g[(ksi, sigma)].issubset(R):
                 return True
         return False
+
+    # method to return the command such that g(ksi, sigma) is in R
+    def sigma_st_g_ksi_sigma_is_in_R(self, ksi: int, R: set):
+        for sigma in range(1, self.num_of_commands + 1):
+            if self.g[(ksi, sigma)] and self.g[(ksi, sigma)].issubset(R):
+                return sigma
+        return None
