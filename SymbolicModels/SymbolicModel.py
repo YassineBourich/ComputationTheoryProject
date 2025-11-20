@@ -26,7 +26,6 @@ class SymbolicModel:
         for sigma in range(1, self.num_of_commands + 1):
             model[(0, sigma)] = all_states
 
-
         # Calculating the symbolic model for each symbolic state and command
         for ksi in range(1, self.num_of_sym_states + 1):
             x_min, x_max = self.discretisator.getPartitionMinAndMax(ksi)
@@ -36,13 +35,13 @@ class SymbolicModel:
 
                 # Constructing the model for every pair (ksi, sigma) by returning the set
                 # of successor states
-                model[(ksi, sigma)] = self.getSetOfSuccessors(f_min, f_max)
+                model[(ksi, sigma)] = self.getSetOfSuccessors(f_min, f_max, ksi, sigma)
 
         return model
 
     # Method that return the set of successor states, which are partitions that intersect
     # with the region f_min, f_max
-    def getSetOfSuccessors(self, f_min, f_max):
+    def getSetOfSuccessors(self, f_min, f_max, ksi, sigma):
         include_x0 = 0
         # If the reachable region is totally out of grid
         if (not vect_all_lte(f_min, self.discretisator.KSI.x_max)) or (not vect_all_lte(self.discretisator.KSI.x_min, f_max)):
@@ -54,7 +53,7 @@ class SymbolicModel:
             # If the reachable region is partially out of grid
             if (not vect_all_lte(f_max, self.discretisator.KSI.x_max)) or (not vect_all_lte(self.discretisator.KSI.x_min, f_min)):
                 f_min, f_max = self.crop_reachable_area(f_min, f_max)
-                # include_x0 = 1
+                include_x0 = 1
 
             min_index = self.discretisator.KSI.vectorToIndex(f_min)
             max_index = self.discretisator.KSI.vectorToIndex(f_max)
@@ -84,7 +83,7 @@ class SymbolicModel:
             if f_max[i] >= self.discretisator.KSI.x_max[i]:
                 f_max[i] = self.discretisator.KSI.x_max[i] - quarter_partition_width
             if f_min[i] <= self.discretisator.KSI.x_min[i]:
-                f_max[i] = self.discretisator.KSI.x_min[i]
+                f_min[i] = self.discretisator.KSI.x_min[i]
         return f_min, f_max
 
     # method to get predecessors of a set of states
@@ -104,7 +103,7 @@ class SymbolicModel:
                 return True
         return False
 
-    # method to return the command such that g(ksi, sigma) is in R
+    # method to return the all commands such that g(ksi, sigma) is in R
     def sigma_st_g_ksi_sigma_is_in_R(self, ksi: int, R: set):
         sigma_set = set()
         for sigma in range(1, self.num_of_commands + 1):

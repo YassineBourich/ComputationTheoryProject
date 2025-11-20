@@ -9,7 +9,8 @@ from SymbolicControllers.SafetyController import SafetyController
 from SymbolicControllers.ReachabilityController import ReachabilityController
 from PlotingUtility import TrajectoryPloter
 
-continuous_sys = TwoDimentionalModel(0.1)
+tau = 1
+continuous_sys = TwoDimentionalModel(tau)
 reachability = Reachability(continuous_sys)
 reachability_method = ReachabilityMethods.MonotonyBasedMethod
 X = [
@@ -17,7 +18,7 @@ X = [
     [10, 10]
 ]
 U = [
-    [0.25, -1],
+    [-1, -1],
     [1, 1]
 ]
 W = [
@@ -29,23 +30,28 @@ Nu = [3, 3]
 
 print("Constructing the symbolic model...")
 model = SymbolicModel(reachability, reachability_method, X, U, W, Nx , Nu)
-Qs = set()
-for ksi in range(51, model.discretisator.KSI.num_of_sym_states - 25):
-    Qs.add(ksi)
-c = SafetyController(model, Qs)
+"""Qs = set()
+
+for j in range(40, 61):
+    for i in range(30, 51):
+        Qs.add(j * 100 + i)"""
+
+Qs = {43, 44, 45, 53, 54, 55, 63, 64, 65}
+
+#c = SafetyController(model, Qs)
 #r = ReachabilityController(model, Qs)
 
-print(c.R_list)
-print(model.g)
+#print(model.g)
+#print(r.R_list)
 
 print("Defining the specification automaton...")
-#Automaton = ExpambleSpecification(model)
+Automaton = ExpambleSpecification(model)
 print("Constructing the controller...")
-#AC = AutomatonBasedController(Automaton, model)
+AC = AutomatonBasedController(Automaton, model)
 
 print("Concrete model: ")
-concrete_model = ConcreteModel(continuous_sys, c)
-
+concrete_model = ConcreteModel(continuous_sys, AC)
+"""
 ksi0 = 51
 
 def construct_trajectory(model, controller, ksi0):
@@ -64,12 +70,12 @@ def construct_trajectory(model, controller, ksi0):
         S.append(ksi_tp1)
 
     return S
-
+"""
 print("Running the program...")
-print(construct_trajectory(model, c, ksi0))
+#print(construct_trajectory(model, c, ksi0))
 
-w = (-0.02, 0.01)
+w = (0.02, 0.01)
 
-print(concrete_model.construct_trajectory(w, [0.2, 6.0]))
+print(concrete_model.construct_trajectory(w, [0.8, 4.5]))
 
 TrajectoryPloter(concrete_model.trajectories[w])

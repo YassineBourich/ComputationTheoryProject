@@ -1,3 +1,7 @@
+from SymbolicControllers.AutomatonBasedController import AutomatonBasedController
+from SymbolicControllers.ReachabilityController import ReachabilityController
+from SymbolicControllers.SafetyController import SafetyController
+
 class ConcreteModel:
     def __init__(self, continuous_sys, symb_controller):
         self.continuous_sys = continuous_sys
@@ -8,18 +12,74 @@ class ConcreteModel:
         self.trajectories = {}
 
     def construct_trajectory(self, w, x0):
+        if isinstance(self.symb_controller, AutomatonBasedController):
+            return self.construct_trajectory_using_automaton_controller(w, x0)
+        elif isinstance(self.symb_controller, ReachabilityController):
+            return self.construct_trajectory_using_reachability_controller(w, x0)
+        elif isinstance(self.symb_controller, SafetyController):
+            return self.construct_trajectory_using_safety_controller(w, x0)
+        else:
+            raise ValueError("ggg")
+
+    def construct_trajectory_using_safety_controller(self, w, x0):
         self.trajectories[w] = [x0]
         t = 0
-        #psi_init = self.symb_controller.A.q0
-        #psi_t = psi_init
+        # print(self.symb_controller.R_list[-1])
         while t < 100:
-            print(self.trajectories[w])
             t += 1
             x_t = self.trajectories[w][-1]
-            #psi_t = self.symb_controller.h1[(psi_t, self.q(x_t))]
-            u_t = self.p(self.symb_controller.h[self.q(x_t)])
+            si = self.symb_controller.h[self.q(x_t)]
+            u_t = self.p(si)
+            print("I am at : " + str(self.q(x_t)) + " - I choose : " + str(si))
 
             x_tp1 = self.continuous_sys.f(x_t, u_t, w)
+            print("to go to: " + str(self.q(x_tp1)) + " from : " + str(
+                self.symb_controller.symb_model.g[(self.q(x_t), si)]))
+            print("=======================\n")
+            self.trajectories[w].append(x_tp1)
+
+        return self.trajectories[w]
+
+    def construct_trajectory_using_reachability_controller(self, w, x0):
+        self.trajectories[w] = [x0]
+        t = 0
+        # print(self.symb_controller.R_list[-1])
+        while not self.symb_controller.isInReachableSet(self.trajectories[w][-1]):#t < 100:
+            t+=1
+            x_t = self.trajectories[w][-1]
+            si = self.symb_controller.h[self.q(x_t)]
+            u_t = self.p(si)
+            print("I am at : " + str(self.q(x_t)) + " - I choose : " + str(si))
+
+            x_tp1 = self.continuous_sys.f(x_t, u_t, w)
+            print("to go to: " + str(self.q(x_tp1)) + " from : " + str(
+                self.symb_controller.symb_model.g[(self.q(x_t), si)]))
+            print("=======================\n")
+            self.trajectories[w].append(x_tp1)
+
+        return self.trajectories[w]
+
+    def construct_trajectory_using_automaton_controller(self, w, x0):
+        self.trajectories[w] = [x0]
+        t = 0
+        psi_init = self.symb_controller.A.q0
+        psi_t = psi_init
+        ksi_tield_t = (psi_init, self.q(x0))
+        # print(self.symb_controller.R_list[-1])
+        while ksi_tield_t not in self.symb_controller.final_product_states():
+            t += 1
+            x_t = self.trajectories[w][-1]
+            psi_t = self.symb_controller.h1[(psi_t, self.q(x_t))]
+            si = self.symb_controller.h2[(psi_t, self.q(x_t))]
+            u_t = self.p(si)
+            print("I am at : " + str((psi_t, self.q(x_t))) + "(transition: " + str(self.symb_controller.A.l(self.q(x_t))) + ")" + " - I choose : " + str(si))
+
+            x_tp1 = self.continuous_sys.f(x_t, u_t, w)
+            print("to go to: " + str(self.q(x_tp1)) + " from : " + str(
+                self.symb_controller.symb_model.g[(self.q(x_t), si)]))
+            print("=======================\n")
+
+            ksi_tield_t = (psi_t, self.q(x_tp1))
             self.trajectories[w].append(x_tp1)
 
         return self.trajectories[w]
