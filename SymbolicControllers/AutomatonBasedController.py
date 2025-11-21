@@ -1,3 +1,5 @@
+from typing import final
+
 from SymbolicModels.MutatedSymbolicModel import MutatedSymbolicModel
 from SymbolicControllers.ReachabilityController import ReachabilityController
 
@@ -32,16 +34,11 @@ class AutomatonBasedController:
         Q0_tield = mutated_reachability_controller.R_list[-1]
         h_tield = mutated_reachability_controller.h
 
-        print("tie:" + str(Q0_tield))
-
         # Constructing the set Q0 and returning the results
         Q0 = set()
         for ksi in range(self.symb_model.num_of_sym_states + 1):
-            print("rr: " + str((self.h1[(self.A.q0, ksi)], ksi)))
             if (self.h1[(self.A.q0, ksi)], ksi) in Q0_tield:
                 Q0.add(ksi)
-
-        print("hei:" + str(Q0))
 
         return h_tield, Q0
 
@@ -61,6 +58,9 @@ class AutomatonBasedController:
             ksi_tield_f = (psi_0, ksi)
             initial_product_states.add(ksi_tield_f)
 
-        print(initial_product_states)
-
         return initial_product_states
+
+    def isSpecificationAchieved(self, psi, x):
+        ksi_tield = (psi, self.symb_model.discretizator.KSI.q(x))
+
+        return ksi_tield in self.final_product_states()

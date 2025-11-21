@@ -1,22 +1,25 @@
 from SpecificationAutomata.Automaton import Automaton
-from Math.Math import vect_all_lte
+from ProjectMath.Math import vect_all_lte
+from math import pi
 
 
-class ExpambleSpecification(Automaton):
+class ExampleSpecification3D(Automaton):
     def __init__(self, symb_model):
         self.symb_model = symb_model
 
         self.Regions = {
-            ((4, 8.5), (5, 9.5)): ['green', 'lightgreen'],
-            ((8.5, 2), (9.5, 3)): ['blue', 'lightblue'],
-            ((2, 0.5), (3, 1.5)): ['gold', 'yellow'],
-            ((3, 3), (7, 7)): ['orangered', 'lightsalmon'],
+            ((4, 8.5, (-1) * pi), (5, 9.5, pi)): ['green', 'lightgreen'],
+            ((8.5, 2, (-1) * pi), (9.5, 3, pi)): ['blue', 'lightblue'],
+            ((2, 0.5, (-1) * pi), (3, 1.5, pi)): ['gold', 'yellow'],
+            ((3, 3, (-1) * pi), (7, 7, pi)): ['orangered', 'lightsalmon'],
         }
 
         Q = {'a', 'b', 'c', 'd', 'e'}
         SIGMA = {0, 1, 2, 3, 4}
         delta = self.transitions_function()
-        super().__init__(Q, SIGMA, delta, 'a', {'d'})
+        q0 = 'a'
+        F = {'d'}
+        super().__init__(Q, SIGMA, delta, q0, F)
 
     def transitions_function(self):
         return {
@@ -54,7 +57,7 @@ class ExpambleSpecification(Automaton):
     def l(self, ksi):
         if ksi == 0: return 4
 
-        x_min, x_max = self.symb_model.discretisator.KSI.getPartitionMinAndMax(ksi)
+        x_min, x_max = self.symb_model.discretizator.KSI.getPartitionMinAndMax(ksi)
 
         for i, region in enumerate(self.Regions):
             if vect_all_lte(region[0], x_min) and vect_all_lte(x_max, region[1]):

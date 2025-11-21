@@ -6,14 +6,12 @@ class ReachabilityController:
         self.h = self.construct_controller()
 
     def getReachabilityDomain(self):
-        Qa = self.Qa.copy()
         R_list = [self.Qa.copy()]
 
-        p = self.symb_model.Pre(R_list[-1])
-        Rkp1 = Qa.union(p)
+        Rkp1 = R_list[0].union(self.symb_model.Pre(R_list[-1]))
         R_list.append(Rkp1)
         while R_list[-1] != R_list[-2]:
-            Rkp1 = Qa.union(self.symb_model.Pre(R_list[-1]))
+            Rkp1 = R_list[0].union(self.symb_model.Pre(R_list[-1]))
             R_list.append(Rkp1)
 
         return R_list
@@ -33,6 +31,6 @@ class ReachabilityController:
         return h
 
     def isInReachableSet(self, x):
-        ksi = self.symb_model.discretisator.q(x)
+        ksi = self.symb_model.discretizator.q(x)
 
         return ksi in self.Qa

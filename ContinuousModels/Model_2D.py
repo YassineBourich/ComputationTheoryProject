@@ -1,11 +1,10 @@
-from Math.Math import vec_add, vec_mul_scalar
+from ProjectMath.Math import vec_add, vec_mul_scalar
+from .ContinuousSystem import ContinuousSystem
 
-class TwoDimentionalModel:
-    def __init__(self, tau):
+class ContinuousModel2D(ContinuousSystem):
+    def __init__(self, tau, X, U, W):
+        super().__init__(X, U, W)
         self.tau = tau
-        self.dim_x = 2
-        self.dim_u = 2
-        self.dim_w = 2
 
     def f(self, x, u, w):
         """

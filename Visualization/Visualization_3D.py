@@ -5,7 +5,7 @@ import math
 
 """
 model = SymbolicModel(reachability, reach_method, X, U, W, Nx, Nu)
-specification: ExpambleSpecification(model)
+specification: ExampleSpecification_2D(model)
 
 """
 

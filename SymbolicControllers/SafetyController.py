@@ -6,13 +6,12 @@ class SafetyController:
         self.h = self.construct_controller()
 
     def getSafetyDomain(self):
-        Qs = self.Qs.copy()
         R_list = [self.Qs.copy()]
 
-        Rkp1 = Qs.intersection(self.symb_model.Pre(R_list[-1]))
+        Rkp1 = R_list[0].intersection(self.symb_model.Pre(R_list[-1]))
         R_list.append(Rkp1)
         while R_list[-1] != R_list[-2]:
-            Rkp1 = Qs.intersection(self.symb_model.Pre(R_list[-1]))
+            Rkp1 = R_list[0].intersection(self.symb_model.Pre(R_list[-1]))
             R_list.append(Rkp1)
 
         return R_list

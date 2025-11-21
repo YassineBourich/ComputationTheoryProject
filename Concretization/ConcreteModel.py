@@ -1,32 +1,34 @@
 from SymbolicControllers.AutomatonBasedController import AutomatonBasedController
 from SymbolicControllers.ReachabilityController import ReachabilityController
 from SymbolicControllers.SafetyController import SafetyController
+from ProjectExceptions.Exceptions import ControllerTypeError
 
 class ConcreteModel:
     def __init__(self, continuous_sys, symb_controller):
         self.continuous_sys = continuous_sys
         self.symb_controller = symb_controller
-        self.q = self.symb_controller.symb_model.discretisator.q
-        self.p = self.symb_controller.symb_model.discretisator.p
+        self.q = self.symb_controller.symb_model.discretizator.q
+        self.p = self.symb_controller.symb_model.discretizator.p
 
         self.trajectories = {}
 
-    def construct_trajectory(self, w, x0):
+    def construct_trajectory(self, w, x0, max_iter=100):
         if isinstance(self.symb_controller, AutomatonBasedController):
-            return self.construct_trajectory_using_dynamic_controller(w, x0)
+            return self.construct_trajectory_using_dynamic_controller(w, x0, max_iter)
         elif isinstance(self.symb_controller, ReachabilityController):
-            return self.construct_trajectory_using_reachability_controller(w, x0)
+            return self.construct_trajectory_using_reachability_controller(w, x0, max_iter)
         elif isinstance(self.symb_controller, SafetyController):
-            return self.construct_trajectory_using_safety_controller(w, x0)
+            return self.construct_trajectory_using_safety_controller(w, x0, max_iter)
         else:
-            raise ValueError("ggg")
+            raise ControllerTypeError("The controller used in concretization is not recognized.")
 
-    def construct_trajectory_using_safety_controller(self, w, x0):
-        self.trajectories[w] = [x0]
+    def construct_trajectory_using_safety_controller(self, w, x0, max_iter):
+        traj_id = (tuple(w), tuple(x0))         # defining the id of a specific trajectory with starting point x0 and a perturbation w
+        self.trajectories[traj_id] = [x0]
         t = 0
-        while t < 100:
+        while t < max_iter:
             t += 1
-            x_t = self.trajectories[w][-1]
+            x_t = self.trajectories[traj_id][-1]
             si = self.symb_controller.h[self.q(x_t)]
             u_t = self.p(si)
             print("I am at : " + str(self.q(x_t)) + " - I choose : " + str(si))
@@ -35,16 +37,17 @@ class ConcreteModel:
             print("to go to: " + str(self.q(x_tp1)) + " from : " + str(
                 self.symb_controller.symb_model.g[(self.q(x_t), si)]))
             print("=======================\n")
-            self.trajectories[w].append(x_tp1)
+            self.trajectories[traj_id].append(x_tp1)
 
-        return self.trajectories[w]
+        return self.trajectories[traj_id]
 
-    def construct_trajectory_using_reachability_controller(self, w, x0):
-        self.trajectories[w] = [x0]
+    def construct_trajectory_using_reachability_controller(self, w, x0, max_iter):
+        traj_id = (tuple(w), tuple(x0))         # defining the id of a specific trajectory with starting point x0 and a perturbation w
+        self.trajectories[traj_id] = [x0]
         t = 0
-        while not self.symb_controller.isInReachableSet(self.trajectories[w][-1]):#t < 100:
-            t+=1
-            x_t = self.trajectories[w][-1]
+        while (not self.symb_controller.isInReachableSet(self.trajectories[traj_id][-1])) and (t < max_iter):
+            t += 1
+            x_t = self.trajectories[traj_id][-1]
             si = self.symb_controller.h[self.q(x_t)]
             u_t = self.p(si)
             print("I am at : " + str(self.q(x_t)) + " - I choose : " + str(si))
@@ -53,12 +56,13 @@ class ConcreteModel:
             print("to go to: " + str(self.q(x_tp1)) + " from : " + str(
                 self.symb_controller.symb_model.g[(self.q(x_t), si)]))
             print("=======================\n")
-            self.trajectories[w].append(x_tp1)
+            self.trajectories[traj_id].append(x_tp1)
 
-        return self.trajectories[w]
+        return self.trajectories[traj_id]
 
-    def construct_trajectory_using_dynamic_controller(self, w, x0):
-        self.trajectories[w] = [x0]
+    def construct_trajectory_using_dynamic_controller(self, w, x0, max_iter):
+        traj_id = (tuple(w), tuple(x0))         # defining the id of a specific trajectory with starting point x0 and a perturbation w
+        self.trajectories[traj_id] = [x0]
         t = 0
 
         psi_init = self.symb_controller.A.q0
@@ -68,9 +72,9 @@ class ConcreteModel:
         print(self.symb_controller.initial_product_states())
 
         ksi_tield_t = (self.symb_controller.h1[(psi_init, self.q(x0))], self.q(x0))
-        while t<100:#False:#ksi_tield_t not in self.symb_controller.final_product_states():
+        while t < max_iter:#False:#ksi_tield_t not in self.symb_controller.final_product_states():
             t += 1
-            x_t = self.trajectories[w][-1]
+            x_t = self.trajectories[traj_id][-1]
             psi_t = self.symb_controller.h1[(psi_t, self.q(x_t))]
             si = self.symb_controller.h2[(psi_t, self.q(x_t))]
             u_t = self.p(si)
@@ -82,6 +86,6 @@ class ConcreteModel:
             print("=======================\n")
 
             ksi_tield_t = (psi_t, self.q(x_tp1))
-            self.trajectories[w].append(x_tp1)
+            self.trajectories[traj_id].append(x_tp1)
 
-        return self.trajectories[w]
+        return self.trajectories[traj_id]

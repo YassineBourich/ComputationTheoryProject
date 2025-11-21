@@ -1,37 +1,45 @@
 from Discretization.Discretizator import Discretizator
 from Reachability.ReachabilityMethods import ReachabilityMethods
-from Math.Math import vect_all_lte
+from ProjectMath.Math import vect_all_lte
 
 class SymbolicModel:
-    def __init__(self, reachability, reachability_method: ReachabilityMethods, X, U, W, Nx, Nu):
+    def __init__(self, continuous_model, reachability, reachability_method: ReachabilityMethods, Nx, Nu):
         self.Nx = Nx
         self.Nu = Nu
-        self.w_min = W[0]
-        self.w_max = W[1]
-        self.discretisator = Discretizator(X[0], X[1], U[0], U[1], self.Nx, self.Nu)
-        self.num_of_sym_states = self.discretisator.KSI.num_of_sym_states
-        self.num_of_commands = self.discretisator.SIGMA.num_of_commands
-        self.g = self.construct_model(reachability, reachability_method)
+        self.continuous_model = continuous_model
+        self.discretizator = Discretizator(
+            self.continuous_model.getX()[0], self.continuous_model.getX()[1],
+            self.continuous_model.getU()[0], self.continuous_model.getU()[1],
+            self.Nx, self.Nu
+        )
 
-    def construct_model(self, reachability, reachability_method: ReachabilityMethods):
+        self.num_of_sym_states = self.discretizator.KSI.num_of_sym_states
+        self.num_of_commands = self.discretizator.SIGMA.num_of_commands
+
+        self.reachability = reachability
+        self.reachability_method = reachability_method
+
+        self.g = self.construct_model()
+
+    def construct_model(self):
         model = {}
 
         # Choose the reachability methods
-        r_m = reachability.reachable_interval_Monotone
-        if not reachability_method.value:
-            r_m = reachability.reachable_interval_Bounds
+        r_m = self.reachability.reachable_interval_Monotone
+        if not self.reachability_method.value:
+            r_m = self.reachability.reachable_interval_Bounds
 
         # Calculating the symbolic for ksi = 0
-        all_states = self.discretisator.KSI.getAllStates()
+        all_states = self.discretizator.KSI.getAllStates()
         for sigma in range(1, self.num_of_commands + 1):
             model[(0, sigma)] = all_states
 
         # Calculating the symbolic model for each symbolic state and command
         for ksi in range(1, self.num_of_sym_states + 1):
-            x_min, x_max = self.discretisator.getPartitionMinAndMax(ksi)
+            x_min, x_max = self.discretizator.getPartitionMinAndMax(ksi)
             for sigma in range(1, self.num_of_commands + 1):
-                u = self.discretisator.p(sigma)
-                f_min, f_max = r_m(x_min, x_max, u, self.w_min, self.w_max)
+                u = self.discretizator.p(sigma)
+                f_min, f_max = r_m(x_min, x_max, u, self.continuous_model.getW()[0], self.continuous_model.getW()[1])
 
                 # Constructing the model for every pair (ksi, sigma) by returning the set
                 # of successor states
@@ -44,19 +52,19 @@ class SymbolicModel:
     def getSetOfSuccessors(self, f_min, f_max, ksi, sigma):
         include_x0 = 0
         # If the reachable region is totally out of grid
-        if (not vect_all_lte(f_min, self.discretisator.KSI.x_max)) or (not vect_all_lte(self.discretisator.KSI.x_min, f_max)):
+        if (not vect_all_lte(f_min, self.discretizator.KSI.getV_max())) or (not vect_all_lte(self.discretizator.KSI.getV_min(), f_max)):
             include_x0 = 2
 
         successors = []
 
         if include_x0 != 2:
             # If the reachable region is partially out of grid
-            if (not vect_all_lte(f_max, self.discretisator.KSI.x_max)) or (not vect_all_lte(self.discretisator.KSI.x_min, f_min)):
+            if (not vect_all_lte(f_max, self.discretizator.KSI.getV_max())) or (not vect_all_lte(self.discretizator.KSI.getV_min(), f_min)):
                 f_min, f_max = self.crop_reachable_area(f_min, f_max)
                 include_x0 = 1
 
-            min_index = self.discretisator.KSI.vectorToIndex(f_min)
-            max_index = self.discretisator.KSI.vectorToIndex(f_max)
+            min_index = self.discretizator.KSI.vectorToIndex(f_min)
+            max_index = self.discretizator.KSI.vectorToIndex(f_max)
 
             successor = min_index.copy()
 
@@ -69,7 +77,7 @@ class SymbolicModel:
                         successor[i + 1] += 1
 
             for i in range(len(successors)):
-                successors[i] = self.discretisator.KSI.indexToPartition(successors[i])
+                successors[i] = self.discretizator.KSI.indexToSymbolicState(successors[i])
 
         if include_x0:
             successors.append(0)
@@ -78,12 +86,12 @@ class SymbolicModel:
 
     # method to crop the reachable area
     def crop_reachable_area(self, f_min, f_max):
-        for i in range(self.discretisator.KSI.dim_x):
-            quarter_partition_width = ((self.discretisator.KSI.x_max[i] - self.discretisator.KSI.x_min[i]) / self.discretisator.KSI.Nx[i]) * 1/4
-            if f_max[i] >= self.discretisator.KSI.x_max[i]:
-                f_max[i] = self.discretisator.KSI.x_max[i] - quarter_partition_width
-            if f_min[i] <= self.discretisator.KSI.x_min[i]:
-                f_min[i] = self.discretisator.KSI.x_min[i]
+        for i in range(self.discretizator.KSI.getDimV()):
+            quarter_partition_width = ((self.discretizator.KSI.getV_max()[i] - self.discretizator.KSI.getV_min()[i]) / self.discretizator.KSI.getNv()[i]) * 1/4
+            if f_max[i] >= self.discretizator.KSI.getV_max()[i]:
+                f_max[i] = self.discretizator.KSI.getV_max()[i] - quarter_partition_width
+            if f_min[i] <= self.discretizator.KSI.getV_min()[i]:
+                f_min[i] = self.discretizator.KSI.getV_min()[i]
         return f_min, f_max
 
     # method to get predecessors of a set of states
@@ -112,18 +120,4 @@ class SymbolicModel:
         return sigma_set
 
     def getAllStates(self):
-        return self.discretisator.KSI.getAllStates()
-
-    # method to return one symbolic state from a set
-    def get_next_state(self, ksi, sigma):
-        states = list(self.g[(ksi, sigma)])
-
-        print("next: " + str(states))
-
-        state = states[0]
-        for i in range(len(states)):
-            if states[i] != ksi:
-                state = states[i]
-                break
-
-        return state
+        return self.discretizator.KSI.getAllStates()

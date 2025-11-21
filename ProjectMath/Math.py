@@ -1,4 +1,4 @@
-from Exceptions.Exceptions import DimensionError
+from ProjectExceptions.Exceptions import DimensionError
 
 # function to calculate the product
 def PI(L):

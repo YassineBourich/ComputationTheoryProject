@@ -20,9 +20,9 @@ class MutatedSymbolicModel:
         ksi_successors = self.symb_model.g[(ksi_tield[1], sigma)]
         successors = set()
 
-        for ksi in ksi_successors:
-            psi_successor = self.h1[(ksi_tield[0], ksi)]
-            successors.add((psi_successor, ksi))
+        for ksi_successor in ksi_successors:
+            psi_successor = self.h1[(ksi_tield[0], ksi_successor)]
+            successors.add((psi_successor, ksi_successor))
 
         return successors
 
