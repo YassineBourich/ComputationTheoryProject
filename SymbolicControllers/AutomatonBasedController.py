@@ -32,13 +32,18 @@ class AutomatonBasedController:
         Q0_tield = mutated_reachability_controller.R_list[-1]
         h_tield = mutated_reachability_controller.h
 
+        print("tie:" + str(Q0_tield))
+
         # Constructing the set Q0 and returning the results
         Q0 = set()
         for ksi in range(self.symb_model.num_of_sym_states + 1):
+            print("rr: " + str((self.h1[(self.A.q0, ksi)], ksi)))
             if (self.h1[(self.A.q0, ksi)], ksi) in Q0_tield:
                 Q0.add(ksi)
 
-        return h_tield, Q0_tield
+        print("hei:" + str(Q0))
+
+        return h_tield, Q0
 
     def final_product_states(self):
         final_reachable_states = set()
@@ -50,10 +55,12 @@ class AutomatonBasedController:
         return final_reachable_states
 
     def initial_product_states(self):
-        initial_reachable_states = set()
+        initial_product_states = set()
         for ksi in range(self.symb_model.num_of_sym_states + 1):
             psi_0 = self.A.q0
             ksi_tield_f = (psi_0, ksi)
-            initial_reachable_states.add(ksi_tield_f)
+            initial_product_states.add(ksi_tield_f)
 
-        return initial_reachable_states
+        print(initial_product_states)
+
+        return initial_product_states

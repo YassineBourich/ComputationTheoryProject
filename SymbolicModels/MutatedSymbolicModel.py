@@ -33,7 +33,6 @@ class MutatedSymbolicModel:
                 ksi_tield = (psi, ksi)
                 if self.exists_sigma_st_ksi_is_pre(ksi_tield, R):
                     predecessors.add(ksi_tield)
-
         return predecessors
 
     # method to check if there is a command such that g(ksi, sigma) is in R (such that ksi

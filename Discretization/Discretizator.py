@@ -20,6 +20,13 @@ class Discretizator:
         except:
             raise
 
+    # method to get the center of a partition
+    def getPartitionCenter(self, ksi):
+        try:
+            return self.KSI.getPartitionCenter(ksi)
+        except:
+            raise
+
     # concretisation interface
     def p(self, sigma: int):
         try:

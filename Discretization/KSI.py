@@ -1,7 +1,8 @@
 from operator import index
 
 from Exceptions.Exceptions import DimensionError
-from Math.Math import PI
+from Math.Math import PI, vec_mul_scalar, vec_add
+
 
 class KSI:
     def __init__(self, x_min, x_max, Nx):
@@ -144,6 +145,16 @@ class KSI:
             state_x_max.append(local_x_min + partition_width)
 
         return state_x_min, state_x_max
+
+    # Method to get the center point of a partition
+    def getPartitionCenter(self, ksi):
+        try:
+            state_x_min, state_x_max = self.getPartitionMinAndMax(ksi)
+
+            x_center = vec_mul_scalar(vec_add(state_x_max, state_x_min), 0.5)
+            return x_center
+        except:
+            raise
 
     # Method to return a set containing all states
     def getAllStates(self):

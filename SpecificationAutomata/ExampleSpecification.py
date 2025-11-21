@@ -6,56 +6,58 @@ class ExpambleSpecification(Automaton):
     def __init__(self, symb_model):
         self.symb_model = symb_model
 
-        self.Regions = [[[4, 8.5], [5, 9.5]],
-            [[8.5, 2], [9.5, 3]],
-            [[2, 0.5], [3, 1.5]],
-            [[3, 3], [7, 7]]]
+        self.Regions = {
+            ((4, 8.5), (5, 9.5)): ['green', 'lightgreen'],
+            ((8.5, 2), (9.5, 3)): ['blue', 'lightblue'],
+            ((2, 0.5), (3, 1.5)): ['gold', 'yellow'],
+            ((3, 3), (7, 7)): ['orangered', 'lightsalmon'],
+        }
 
-        Q = {1, 2, 3, 4, 5}
+        Q = {'a', 'b', 'c', 'd', 'e'}
         SIGMA = {0, 1, 2, 3, 4}
         delta = self.transitions_function()
-        super().__init__(Q, SIGMA, delta, 1, {5})
+        super().__init__(Q, SIGMA, delta, 'a', {'d'})
 
     def transitions_function(self):
         return {
-            (1, 0): 1,
-            (1, 1): 2,
-            (1, 2): 3,
-            (1, 3): 1,
-            (1, 4): 5,
+            ('a', 0): 'a',
+            ('a', 1): 'b',
+            ('a', 2): 'c',
+            ('a', 3): 'a',
+            ('a', 4): 'e',
 
-            (2, 0): 2,
-            (2, 1): 2,
-            (2, 2): 5,
-            (2, 3): 4,
-            (2, 4): 5,
+            ('b', 0): 'b',
+            ('b', 1): 'b',
+            ('b', 2): 'e',
+            ('b', 3): 'd',
+            ('b', 4): 'e',
 
-            (3, 0): 3,
-            (3, 1): 5,
-            (3, 2): 3,
-            (3, 3): 4,
-            (3, 4): 5,
+            ('c', 0): 'c',
+            ('c', 1): 'e',
+            ('c', 2): 'c',
+            ('c', 3): 'd',
+            ('c', 4): 'e',
 
-            (4, 0): 4,
-            (4, 1): 4,
-            (4, 2): 4,
-            (4, 3): 4,
-            (4, 4): 4,
+            ('d', 0): 'd',
+            ('d', 1): 'd',
+            ('d', 2): 'd',
+            ('d', 3): 'd',
+            ('d', 4): 'd',
 
-            (5, 0): 5,
-            (5, 1): 5,
-            (5, 2): 5,
-            (5, 3): 5,
-            (5, 4): 5,
+            ('e', 0): 'e',
+            ('e', 1): 'e',
+            ('e', 2): 'e',
+            ('e', 3): 'e',
+            ('e', 4): 'e',
         }
 
     def l(self, ksi):
-        if ksi == 0: return 0
+        if ksi == 0: return 4
 
         x_min, x_max = self.symb_model.discretisator.KSI.getPartitionMinAndMax(ksi)
 
-        for i in range(len(self.Regions)):
-            if vect_all_lte(self.Regions[i][0], x_min) and vect_all_lte(x_max, self.Regions[i][1]):
+        for i, region in enumerate(self.Regions):
+            if vect_all_lte(region[0], x_min) and vect_all_lte(x_max, region[1]):
                 return i + 1
 
         return 0

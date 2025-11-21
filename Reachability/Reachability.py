@@ -32,8 +32,8 @@ class Reachability:
             #f* = f(x*, u, w*)
             f_star = self.f(x_star, u, w_star)
 
-            Dx_delta_x = mat_vec_mul(self.D_x, delta_x)
-            Dw_delta_w = mat_vec_mul(self.D_w, delta_w)
+            Dx_delta_x = mat_vec_mul(self.D_x(u), delta_x)
+            Dw_delta_w = mat_vec_mul(self.D_w(u), delta_w)
 
             abs_margin = vec_add(vec_abs(Dx_delta_x), vec_abs(Dw_delta_w))  # Dx delta(x) + Dw delta(w)
 

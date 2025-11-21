@@ -10,7 +10,6 @@ class ReachabilityController:
         R_list = [self.Qa.copy()]
 
         p = self.symb_model.Pre(R_list[-1])
-        print("Pre of qa = " + str(p))
         Rkp1 = Qa.union(p)
         R_list.append(Rkp1)
         while R_list[-1] != R_list[-2]:
@@ -24,7 +23,6 @@ class ReachabilityController:
         for k in range(len(self.R_list) - 1, 0, -1):
             for ksi in self.R_list[k]:
                 sigma = self.symb_model.sigma_st_g_ksi_sigma_is_in_R(ksi, self.R_list[k - 1])
-                print("For " + str(ksi) + " We have " + str(sigma))
                 if sigma:
                     h[ksi] = list(sigma)[0]
 

@@ -13,7 +13,7 @@ class ConcreteModel:
 
     def construct_trajectory(self, w, x0):
         if isinstance(self.symb_controller, AutomatonBasedController):
-            return self.construct_trajectory_using_automaton_controller(w, x0)
+            return self.construct_trajectory_using_dynamic_controller(w, x0)
         elif isinstance(self.symb_controller, ReachabilityController):
             return self.construct_trajectory_using_reachability_controller(w, x0)
         elif isinstance(self.symb_controller, SafetyController):
@@ -24,7 +24,6 @@ class ConcreteModel:
     def construct_trajectory_using_safety_controller(self, w, x0):
         self.trajectories[w] = [x0]
         t = 0
-        # print(self.symb_controller.R_list[-1])
         while t < 100:
             t += 1
             x_t = self.trajectories[w][-1]
@@ -43,7 +42,6 @@ class ConcreteModel:
     def construct_trajectory_using_reachability_controller(self, w, x0):
         self.trajectories[w] = [x0]
         t = 0
-        # print(self.symb_controller.R_list[-1])
         while not self.symb_controller.isInReachableSet(self.trajectories[w][-1]):#t < 100:
             t+=1
             x_t = self.trajectories[w][-1]
@@ -59,14 +57,18 @@ class ConcreteModel:
 
         return self.trajectories[w]
 
-    def construct_trajectory_using_automaton_controller(self, w, x0):
+    def construct_trajectory_using_dynamic_controller(self, w, x0):
         self.trajectories[w] = [x0]
         t = 0
+
         psi_init = self.symb_controller.A.q0
+        print(psi_init)
         psi_t = psi_init
-        ksi_tield_t = (psi_init, self.q(x0))
-        # print(self.symb_controller.R_list[-1])
-        while ksi_tield_t not in self.symb_controller.final_product_states():
+
+        print(self.symb_controller.initial_product_states())
+
+        ksi_tield_t = (self.symb_controller.h1[(psi_init, self.q(x0))], self.q(x0))
+        while t<100:#False:#ksi_tield_t not in self.symb_controller.final_product_states():
             t += 1
             x_t = self.trajectories[w][-1]
             psi_t = self.symb_controller.h1[(psi_t, self.q(x_t))]
