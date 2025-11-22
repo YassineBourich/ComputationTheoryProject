@@ -33,7 +33,6 @@ def plot_trajectory(trajectories, traj_colors, Regions):
             linestyle='-', linewidth=0.5,
             markersize=2.5,
             color=traj_colors[i % len(traj_colors)],
-            label=f'Trajectory {i + 1}',
             zorder=5
         )
 

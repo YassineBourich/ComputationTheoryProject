@@ -1,0 +1,15 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# IDE folders
+.idea/
+.vscode/
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Model files
+*.mdl

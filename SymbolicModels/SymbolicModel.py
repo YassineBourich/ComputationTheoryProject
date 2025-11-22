@@ -1,6 +1,7 @@
 from Discretization.Discretizator import Discretizator
 from Reachability.ReachabilityMethods import ReachabilityMethods
 from ProjectMath.Math import vect_all_lte
+import pickle
 
 class SymbolicModel:
     def __init__(self, continuous_model, reachability, reachability_method: ReachabilityMethods, Nx, Nu):
@@ -22,6 +23,7 @@ class SymbolicModel:
         self.g = self.construct_model()
 
     def construct_model(self):
+        print("Constructing the symbolic model...")
         model = {}
 
         # Choose the reachability methods
@@ -45,6 +47,7 @@ class SymbolicModel:
                 # of successor states
                 model[(ksi, sigma)] = self.getSetOfSuccessors(f_min, f_max, ksi, sigma)
 
+        print("Symbolic model constructed.")
         return model
 
     # Method that return the set of successor states, which are partitions that intersect
@@ -121,3 +124,23 @@ class SymbolicModel:
 
     def getAllStates(self):
         return self.discretizator.KSI.getAllStates()
+
+    def save_model(self, filename):
+        try:
+            print("Saving symbolic model...")
+            with open(filename, "wb") as f:
+                pickle.dump(self, f)
+                print("Symbolic model saved.")
+        except:
+            raise
+
+    @classmethod
+    def load_model(self, filename):
+        try:
+            print("Loading symbolic model...")
+            with open(filename, "rb") as f:
+                model = pickle.load(f)
+                print("Symbolic model loaded.")
+                return model
+        except:
+            raise

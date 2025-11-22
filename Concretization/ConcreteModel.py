@@ -62,17 +62,18 @@ class ConcreteModel:
 
     def construct_trajectory_using_dynamic_controller(self, w, x0, max_iter):
         traj_id = (tuple(w), tuple(x0))         # defining the id of a specific trajectory with starting point x0 and a perturbation w
-        self.trajectories[traj_id] = [x0]
+        self.trajectories[traj_id] = []
         t = 0
 
         psi_init = self.symb_controller.A.q0
         print(psi_init)
-        psi_t = psi_init
+        psi_t = self.symb_controller.h1[(psi_init, self.q(x0))]
+        x_t = x0
 
         print(self.symb_controller.initial_product_states())
 
-        ksi_tield_t = (self.symb_controller.h1[(psi_init, self.q(x0))], self.q(x0))
-        while t < max_iter:#False:#ksi_tield_t not in self.symb_controller.final_product_states():
+        while (not self.symb_controller.isSpecificationAchieved(psi_t, x_t)) and (t < max_iter):#False:#ksi_tield_t not in self.symb_controller.final_product_states():
+            self.trajectories[traj_id].append(x_t)
             t += 1
             x_t = self.trajectories[traj_id][-1]
             psi_t = self.symb_controller.h1[(psi_t, self.q(x_t))]
@@ -85,7 +86,6 @@ class ConcreteModel:
                 self.symb_controller.symb_model.g[(self.q(x_t), si)]))
             print("=======================\n")
 
-            ksi_tield_t = (psi_t, self.q(x_tp1))
-            self.trajectories[traj_id].append(x_tp1)
+            x_t = x_tp1
 
         return self.trajectories[traj_id]

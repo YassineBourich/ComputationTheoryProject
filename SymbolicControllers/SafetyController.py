@@ -1,4 +1,6 @@
-class SafetyController:
+from SymbolicControllers.SymbolicController import SymbolicController
+
+class SafetyController(SymbolicController):
     def __init__(self, symb_model, Qs: set):
         self.symb_model = symb_model
         self.Qs = Qs

@@ -3,6 +3,8 @@ from Reachability.ReachabilityMethods import ReachabilityMethods
 from Reachability.Reachability import Reachability
 from ContinuousModels.Model_2D import ContinuousModel2D
 from .SafetyTest import SafetyTest
+from .ReachabilityTest import ReachabilityTest
+from .SpecificationTest import SpecificationTest
 
 def Test2DModel():
     # Defining the continuous_model
@@ -36,4 +38,6 @@ def Test2DModel():
     symb_model = SymbolicModel(continuous_sys, reachability, reachability_method, Nx , Nu)
     print("Symbolic model constructed.")
 
-    SafetyTest(symb_model).test_set3()
+    #SafetyTest(symb_model).test_set2()
+    #ReachabilityTest(symb_model).test_set2()
+    SpecificationTest(symb_model).test_n_perturbation(50)

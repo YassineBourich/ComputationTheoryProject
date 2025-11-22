@@ -1,4 +1,6 @@
-class ReachabilityController:
+from SymbolicControllers.SymbolicController import SymbolicController
+
+class ReachabilityController(SymbolicController):
     def __init__(self, symb_model, Qa: set):
         self.symb_model = symb_model
         self.Qa = Qa

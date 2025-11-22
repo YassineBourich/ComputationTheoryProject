@@ -16,6 +16,15 @@ class ContinuousSystem:
     def getW(self):
         return self.W
 
+    def get_dim_x(self):
+        return self.dim_x
+
+    def get_dim_u(self):
+        return self.dim_u
+
+    def get_dim_w(self):
+        return self.dim_w
+
     # setters
     def setX(self, X):
         try:

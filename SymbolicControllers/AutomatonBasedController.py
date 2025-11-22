@@ -1,9 +1,8 @@
-from typing import final
-
 from SymbolicModels.MutatedSymbolicModel import MutatedSymbolicModel
 from SymbolicControllers.ReachabilityController import ReachabilityController
+from SymbolicControllers.SymbolicController import SymbolicController
 
-class AutomatonBasedController:
+class AutomatonBasedController(SymbolicController):
     def __init__(self, Automaton, symb_model):
         self.A = Automaton
         self.symb_model = symb_model
