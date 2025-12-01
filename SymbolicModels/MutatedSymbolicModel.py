@@ -36,35 +36,36 @@ class MutatedSymbolicModel:
     def Pre(self, R):
         R_prime = self.construct_R_dictionary(R)
         R_grid = self.construct_R_grid(set(R_prime.keys()))
+        compat_grids = self.construct_compatibility_grids(R_prime)
 
         predecessors = set()
         bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"
         for ksi_tield in tqdm(self.getAllStates(), bar_format=bar_format, ncols=80):
-            if self.exists_sigma_st_ksi_is_pre(ksi_tield, R_prime, R_grid):
+            if self.exists_sigma_st_ksi_is_pre(ksi_tield, compat_grids, R_grid):
                 predecessors.add(ksi_tield)
         return predecessors
 
     # method to check if there is a command such that g(ksi, sigma) is in R (such that ksi
     # is a predecessor)
-    def exists_sigma_st_ksi_is_pre(self, ksi_tield, R_prime, R_grid):
+    def exists_sigma_st_ksi_is_pre(self, ksi_tield, compat_grids, R_grid):
         for sigma in self.symb_model.getAllCommands():
             if (ksi_tield, sigma) in self.g_tield:
                 q_min, q_max = self.g_tield[(ksi_tield, sigma)]
                 if not self.rectangle_in_R(q_min, q_max, R_grid):
                     continue
-                if self.states_are_compatible(q_min, q_max, ksi_tield[0], R_prime):
+                if self.states_are_compatible_grid(q_min, q_max, ksi_tield[0], compat_grids):
                     return True
         return False
 
     # method to return the command such that g(ksi_tield, sigma) is in R
-    def sigma_st_g_ksi_sigma_is_in_R(self, ksi_tield, R_prime, R_grid):
+    def sigma_st_g_ksi_sigma_is_in_R(self, ksi_tield, compat_grids, R_grid):
         sigma_set = set()
         for sigma in self.symb_model.getAllCommands():
             if (ksi_tield, sigma) in self.g_tield:
                 q_min, q_max = self.g_tield[(ksi_tield, sigma)]
                 if not self.rectangle_in_R(q_min, q_max, R_grid):
                     continue
-                if self.states_are_compatible(q_min, q_max, ksi_tield[0], R_prime):
+                if self.states_are_compatible_grid(q_min, q_max, ksi_tield[0], compat_grids):
                     sigma_set.add(sigma)
         return sigma_set
 
@@ -98,6 +99,41 @@ class MutatedSymbolicModel:
         slices = tuple(slice(a, b + 1) for a, b in zip(q_min, q_max))
         # Check if all states in rectangle are in R
         return R_grid[slices].all()
+
+    def construct_compatibility_grids(self, R_prime):
+        """
+        Precompute, for each automaton state psi, a boolean grid over the
+        symbolic state space such that grid_psi[ksi] is True iff:
+          - ksi is in R (i.e. appears in R_prime), and
+          - h1[(psi, ksi)] is also in the allowed set R_prime[ksi].
+
+        This turns the per-rectangle universal check into a fast NumPy slice
+        `.all()` instead of iterating over all states in R for every rectangle.
+        """
+        # Shape of the state grid
+        shape = [self.symb_model.Nx[i] + 1 for i in range(self.symb_model.continuous_model.get_dim_x())]
+
+        # Start with all True; cells not in R will be filtered out by R_grid
+        compat_grids = {
+            psi: np.ones(shape, dtype=bool) for psi in self.Automaton.Q
+        }
+
+        # Only states present in R_prime matter for compatibility
+        for ksi_plus, psi_set in R_prime.items():
+            for psi in self.Automaton.Q:
+                # Compatible if successor is one of the allowed psi for this ksi_plus
+                compat_grids[psi][ksi_plus] = self.h1[(psi, ksi_plus)] in psi_set
+
+        return compat_grids
+
+    def states_are_compatible_grid(self, q_min, q_max, psi, compat_grids):
+        """
+        Fast compatibility check using precomputed grids.
+        Assumes that rectangle_in_R(q_min, q_max, R_grid) has already been
+        verified, so every point in the rectangle is in R.
+        """
+        grid = compat_grids[psi]
+        return self.rectangle_in_R(q_min, q_max, grid)
 
     def getAllStates(self):
         states = set()
