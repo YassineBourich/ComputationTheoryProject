@@ -76,7 +76,7 @@ def Test3DModel():
     A = ExampleSpecification3D(symb_model)
 
     s = AutomatonBasedController(A, symb_model)
-    s.symb_model("SpecificationController3D_0.ctl")
+    s.save_controller("SpecificationController3D_0.ctl")
 
     c = ConcreteModel(continuous_sys, s)
 
