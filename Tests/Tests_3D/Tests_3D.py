@@ -1,5 +1,7 @@
+import os
 from SpecificationAutomata.Automaton import Automaton
 from SymbolicControllers.AutomatonBasedController import AutomatonBasedController
+from SymbolicControllers.SymbolicController import SymbolicController
 from SymbolicModels.SymbolicModel import SymbolicModel
 from Reachability.ReachabilityMethods import ReachabilityMethods
 from Reachability.Reachability import Reachability
@@ -49,15 +51,19 @@ def Test3DModel():
     reachability_method = ReachabilityMethods.BoundedJacobianMethod
     print("Reachability method defined.")
 
-    # Constructing the Symbolic model
+    # Constructing or loading the symbolic model (cache to speed up repeated runs)
     Nx = [100, 100, 30]
     Nu = [3, 5]
-    symb_model = SymbolicModel(continuous_sys, reachability, reachability_method, Nx , Nu)
-    #symb_model = SymbolicModel.load_model("SymbolicModel3D_2.mdl")
+    model_filename = "SymbolicModel3D_0.mdl"
+    if os.path.exists(model_filename):
+        symb_model = SymbolicModel.load_model(model_filename)
+        print(f"Loaded symbolic model from '{model_filename}'.")
+    else:
+        symb_model = SymbolicModel(continuous_sys, reachability, reachability_method, Nx , Nu)
+        symb_model.save_model(model_filename)
+        print(f"Constructed and saved symbolic model to '{model_filename}'.")
 
-    #print(symb_model.g)
     print(symb_model.continuous_model)
-    symb_model.save_model("SymbolicModel3D_0.mdl")
 
     Qs = set()
     for ksi in symb_model.getAllStates():
@@ -72,15 +78,20 @@ def Test3DModel():
     #s = ReachabilityController.load_model("ReachabilityController3D_3x7_3x7.ctl")
     #s.save_controller("ReachabilityController3D_3x7_3x7.ctl")
 
-
+    controller_filename = "SpecificationController3D_0.ctl"
+    # Always (re)build the specification controller to ensure compatibility
+    # with the current model and reachability implementation.
     A = ExampleSpecification3D(symb_model)
-
     s = AutomatonBasedController(A, symb_model)
-    s.save_controller("SpecificationController3D_0.ctl")
+    s.save_controller(controller_filename)
+    print(f"Constructed and saved specification controller to '{controller_filename}'.")
 
     c = ConcreteModel(continuous_sys, s)
 
-    c.construct_trajectory(generate_random_w(symb_model), generate_random_x(s.Q0, symb_model))
+    # If no initial states satisfy the specification, fall back to all symbolic states
+    initial_states = s.Q0 if getattr(s, "Q0", None) else set(symb_model.getAllStates())
+
+    c.construct_trajectory(generate_random_w(symb_model), generate_random_x(initial_states, symb_model))
 
     plot_trajectory(c.trajectories.values(), ['red'], A.Regions)#{((3, 3), (7, 7)): ['green', 'lightgreen']})
 

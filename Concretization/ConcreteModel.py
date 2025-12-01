@@ -62,7 +62,7 @@ class ConcreteModel:
 
     def construct_trajectory_using_dynamic_controller(self, w, x0, max_iter):
         traj_id = (tuple(w), tuple(x0))         # defining the id of a specific trajectory with starting point x0 and a perturbation w
-        self.trajectories[traj_id] = []
+        self.trajectories[traj_id] = [x0]  # Start with initial state
         t = 0
 
         psi_init = self.symb_controller.A.q0
@@ -72,10 +72,14 @@ class ConcreteModel:
 
         print(self.symb_controller.initial_product_states())
 
-        while (not self.symb_controller.isSpecificationAchieved(psi_t, x_t)) and (t < max_iter):#False:#ksi_tield_t not in self.symb_controller.final_product_states():
-            self.trajectories[traj_id].append(x_t)
+        while (not self.symb_controller.isSpecificationAchieved(psi_t, x_t)) and (t < max_iter):
             t += 1
-            x_t = self.trajectories[traj_id][-1]
+
+            # Stop if we leave the discretization grid to avoid invalid symbolic states
+            if not self.symb_controller.symb_model.discretizator.KSI.in_grid(x_t):
+                print("State left the discretization grid; stopping trajectory construction.")
+                break
+
             psi_t = self.symb_controller.h1[(psi_t, self.q(x_t))]
             si = self.symb_controller.h2[(psi_t, self.q(x_t))]
             u_t = self.p(si)
@@ -86,6 +90,8 @@ class ConcreteModel:
                 self.symb_controller.symb_model.g[(self.q(x_t), si)]))
             print("=======================\n")
 
+            # Append the new state
+            self.trajectories[traj_id].append(x_tp1)
             x_t = x_tp1
 
         return self.trajectories[traj_id]

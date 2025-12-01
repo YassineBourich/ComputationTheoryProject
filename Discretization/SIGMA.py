@@ -27,7 +27,20 @@ class SIGMA(DiscretSpace):
 
     # concretisation interface
     def p(self, sigma):
-        if (vect_all_lte(sigma, (0,) * self.dim_u) and sigma != (0,) * self.dim_u) or (not vect_all_lte(sigma, self.Nu)):
+        """
+        Concretization interface.
+
+        `sigma` can be either:
+          - an integer command index in [1, num_of_commands], or
+          - a tuple/list of per-dimension indices (1-based) of length dim_u.
+        """
+        # Accept integer indices by converting them to per-dimension coordinates
+        if isinstance(sigma, int):
+            sigma_idx = tuple(self.commandToIndex(sigma))
+        else:
+            sigma_idx = tuple(sigma)
+
+        if (vect_all_lte(sigma_idx, (0,) * self.dim_u) and sigma_idx != (0,) * self.dim_u) or (not vect_all_lte(sigma_idx, self.Nu)):
             raise CommandError("the index of the command is out of range")
 
         #sigma -= 1
@@ -38,7 +51,7 @@ class SIGMA(DiscretSpace):
         # Calculating the central position of the command in its coordinates
         for n in range(self.dim_u):
             partition_width = (self.u_max[n] - self.u_min[n]) / self.Nu[n]
-            u.append(self.u_min[n] + partition_width * (sigma[n] - 0.5))
+            u.append(self.u_min[n] + partition_width * (sigma_idx[n] - 0.5))
 
         return tuple(u)
 

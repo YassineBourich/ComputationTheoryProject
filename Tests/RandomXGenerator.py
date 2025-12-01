@@ -2,9 +2,19 @@ import random
 
 # Generate a random vector x that is inside the set of symbolic states S
 def generate_random_x(S: set, model, state_divisions=100):
+    """
+    Pick a random concrete state inside one of the symbolic states in S.
+
+    S: set of symbolic state indices (e.g. subset of symb_model.getAllStates()).
+    model: symbolic model instance, expected to expose discretizator.KSI.getPartitionMinAndMax.
+    """
+    if not S:
+        raise ValueError("generate_random_x called with an empty state set S.")
+
     random_state = random.choice(list(S))
 
-    state_x_min, state_x_max = model.discretizator.getPartitionMinAndMax(random_state)
+    # The discretization is handled by the KSI component of the discretizator
+    state_x_min, state_x_max = model.discretizator.KSI.getPartitionMinAndMax(random_state)
 
     x = []
     for i in range(model.continuous_model.get_dim_x()):

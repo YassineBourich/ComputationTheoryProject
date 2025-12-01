@@ -142,3 +142,10 @@ class MutatedSymbolicModel:
                 states.add((psi, ksi))
 
         return states
+
+    def getAllCommands(self):
+        """
+        The mutated model shares the same command space as the underlying
+        symbolic model, so we simply delegate.
+        """
+        return self.symb_model.getAllCommands()

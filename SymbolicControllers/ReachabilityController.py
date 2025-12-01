@@ -36,6 +36,8 @@ class ReachabilityController(SymbolicController):
         h = {}
         R_prime = None
         compat_grids = None
+        # Choose a deterministic default command that is always valid
+        default_sigma = next(iter(self.symb_model.getAllCommands()))
         bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"
         for k in range(len(self.R_list) - 1, 1, -1):
             print(f"iter {k}")
@@ -56,7 +58,7 @@ class ReachabilityController(SymbolicController):
 
         for ksi in self.symb_model.getAllStates():
             if ksi not in h:
-                h[ksi] = 1
+                h[ksi] = default_sigma
 
         return h
 
