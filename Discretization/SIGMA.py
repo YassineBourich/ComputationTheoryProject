@@ -1,5 +1,6 @@
 from Discretization.DiscretSpace import DiscretSpace
 from ProjectExceptions.Exceptions import CommandError
+from ProjectMath.Math import vect_all_lte
 
 class SIGMA(DiscretSpace):
     def __init__(self, u_min, u_max, Nu):
@@ -26,17 +27,30 @@ class SIGMA(DiscretSpace):
 
     # concretisation interface
     def p(self, sigma):
-        if sigma <= 0 or sigma > self.num_of_commands:
+        if (vect_all_lte(sigma, (0,) * self.dim_u) and sigma != (0,) * self.dim_u) or (not vect_all_lte(sigma, self.Nu)):
             raise CommandError("the index of the command is out of range")
 
-        sigma -= 1
-        command_coords = self.commandToIndex(sigma)
+        #sigma -= 1
+        #command_coords = self.commandToIndex(sigma)
 
         u = []
 
         # Calculating the central position of the command in its coordinates
         for n in range(self.dim_u):
             partition_width = (self.u_max[n] - self.u_min[n]) / self.Nu[n]
-            u.append(self.u_min[n] + partition_width * (command_coords[n] + 1/2))
+            u.append(self.u_min[n] + partition_width * (sigma[n] - 0.5))
 
-        return u
+        return tuple(u)
+
+    def getAllCommands(self):
+        symb_commands = set()
+        sigma = [1] * self.dim_u
+        while vect_all_lte(sigma, self.Nu):
+            symb_commands.add(tuple(sigma.copy()))
+            sigma[0] += 1
+            for i in range(self.dim_u - 1):
+                if sigma[i] > self.Nu[i]:
+                    sigma[i] = 1
+                    sigma[i + 1] += 1
+
+        return symb_commands

@@ -15,7 +15,7 @@ class ContinuousModel3D(ContinuousSystem):
         try:
             f1 = x[0] + self.tau * (u[0] * cos(x[2]) + w[0])
             f2 = x[1] + self.tau * (u[0] * sin(x[2]) + w[1])
-            f3 = (x[2] + self.tau * (u[1] + w[2])) % (2 * pi)
+            f3 = ((x[2] + self.tau * (u[1] + w[2])) % (2 * pi)) - pi
 
             return [f1, f2, f3]
         except:

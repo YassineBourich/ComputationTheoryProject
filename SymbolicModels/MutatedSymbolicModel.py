@@ -1,3 +1,7 @@
+import numpy as np
+from ProjectMath.Math import vect_all_lte
+from tqdm import tqdm
+
 class MutatedSymbolicModel:
     def __init__(self, symb_model, Automaton, h1):
         self.symb_model = symb_model
@@ -7,16 +11,19 @@ class MutatedSymbolicModel:
 
     def construct_model(self):
         model = {}
-
-        for ksi in range(0, self.symb_model.num_of_sym_states + 1):
+        print("Constructing the mutated symbolic model...")
+        bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"
+        for ksi in tqdm(self.symb_model.getAllStates(), bar_format=bar_format, ncols=80):
             for psi in self.Automaton.Q:
                 ksi_tield = (psi, ksi)
-                for sigma in range(1, self.symb_model.num_of_commands + 1):
-                    model[(ksi_tield, sigma)] = self.getSetOfSuccessors(ksi_tield, sigma)
+                for sigma in self.symb_model.getAllCommands():
+                    model[(ksi_tield, sigma)] = self.symb_model.g[(ksi, sigma)] #self.getSetOfSuccessors(ksi_tield, sigma)
 
+        print("Mutated symbolic model constructed: DONE")
         return model
 
     def getSetOfSuccessors(self, ksi_tield, sigma):
+        print("Resolving successors of (" + str(ksi_tield) + ", " + str(sigma) + ")...")
         ksi_successors = self.symb_model.g[(ksi_tield[1], sigma)]
         successors = set()
 
@@ -27,29 +34,70 @@ class MutatedSymbolicModel:
         return successors
 
     def Pre(self, R):
+        R_prime = self.construct_R_dictionary(R)
+        R_grid = self.construct_R_grid(set(R_prime.keys()))
+
         predecessors = set()
-        for ksi in range(self.symb_model.num_of_sym_states + 1):
-            for psi in self.Automaton.Q:
-                ksi_tield = (psi, ksi)
-                if self.exists_sigma_st_ksi_is_pre(ksi_tield, R):
-                    predecessors.add(ksi_tield)
+        bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"
+        for ksi_tield in tqdm(self.getAllStates(), bar_format=bar_format, ncols=80):
+            if self.exists_sigma_st_ksi_is_pre(ksi_tield, R_prime, R_grid):
+                predecessors.add(ksi_tield)
         return predecessors
 
     # method to check if there is a command such that g(ksi, sigma) is in R (such that ksi
     # is a predecessor)
-    def exists_sigma_st_ksi_is_pre(self, ksi_tield, R):
-        for sigma in range(1, self.symb_model.num_of_commands + 1):
-            if self.g_tield[(ksi_tield, sigma)] and self.g_tield[(ksi_tield, sigma)].issubset(R):
-                return True
+    def exists_sigma_st_ksi_is_pre(self, ksi_tield, R_prime, R_grid):
+        for sigma in self.symb_model.getAllCommands():
+            if (ksi_tield, sigma) in self.g_tield:
+                q_min, q_max = self.g_tield[(ksi_tield, sigma)]
+                if not self.rectangle_in_R(q_min, q_max, R_grid):
+                    continue
+                if self.states_are_compatible(q_min, q_max, ksi_tield[0], R_prime):
+                    return True
         return False
 
     # method to return the command such that g(ksi_tield, sigma) is in R
-    def sigma_st_g_ksi_sigma_is_in_R(self, ksi_tield, R: set):
+    def sigma_st_g_ksi_sigma_is_in_R(self, ksi_tield, R_prime, R_grid):
         sigma_set = set()
-        for sigma in range(1, self.symb_model.num_of_commands + 1):
-            if self.g_tield[(ksi_tield, sigma)] and self.g_tield[(ksi_tield, sigma)].issubset(R):
-                sigma_set.add(sigma)
+        for sigma in self.symb_model.getAllCommands():
+            if (ksi_tield, sigma) in self.g_tield:
+                q_min, q_max = self.g_tield[(ksi_tield, sigma)]
+                if not self.rectangle_in_R(q_min, q_max, R_grid):
+                    continue
+                if self.states_are_compatible(q_min, q_max, ksi_tield[0], R_prime):
+                    sigma_set.add(sigma)
         return sigma_set
+
+    def construct_R_dictionary(self, R: set):
+        R_dict = {}
+
+        for ksi_tield in R:
+            if ksi_tield[1] in R_dict:
+                R_dict[ksi_tield[1]].add(ksi_tield[0])
+            else:
+                R_dict[ksi_tield[1]] = {ksi_tield[0]}
+
+        return R_dict
+
+    def states_are_compatible(self, q_min, q_max, psi, R_prime):
+        for ksi_plus in R_prime:
+            if vect_all_lte(q_min, ksi_plus) and vect_all_lte(ksi_plus, q_max):
+                if self.h1[(psi, ksi_plus)] not in R_prime[ksi_plus]:
+                    return False
+        return True
+
+    def construct_R_grid(self, R: set):
+        R_grid = np.zeros([self.symb_model.Nx[i] + 1 for i in range(self.symb_model.continuous_model.get_dim_x())], dtype=bool)
+        for v in R:
+            R_grid[v] = True
+
+        return R_grid
+
+    def rectangle_in_R(self, q_min, q_max, R_grid):
+        # Build slice for each dimension
+        slices = tuple(slice(a, b + 1) for a, b in zip(q_min, q_max))
+        # Check if all states in rectangle are in R
+        return R_grid[slices].all()
 
     def getAllStates(self):
         states = set()

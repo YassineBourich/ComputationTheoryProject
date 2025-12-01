@@ -6,6 +6,11 @@ from .SafetyTest import SafetyTest
 from .ReachabilityTest import ReachabilityTest
 from .SpecificationTest import SpecificationTest
 from math import pi
+from SymbolicControllers.SafetyController import SafetyController
+from Tests.RandomXGenerator import *
+from Concretization.ConcreteModel import ConcreteModel
+from SymbolicControllers.ReachabilityController import ReachabilityController
+from Visualization.PlotingUtility import plot_trajectory
 
 tau = 1
 def Dx(u):
@@ -45,12 +50,42 @@ def Test3DModel():
     Nx = [100, 100, 30]
     Nu = [3, 5]
     #symb_model = SymbolicModel(continuous_sys, reachability, reachability_method, Nx , Nu)
-    symb_model = SymbolicModel.load_model("SymbolicModel3D_0.mdl")
+    symb_model = SymbolicModel.load_model("SymbolicModel3D_2.mdl")
 
-    print(symb_model.g)
+    #print(symb_model.g)
     print(symb_model.continuous_model)
-    #symb_model.save_model("SymbolicModel3D_0.mdl")
+    #symb_model.save_model("SymbolicModel3D_2.mdl")
+
+    Qs = set()
+    for ksi in symb_model.getAllStates():
+        local_x_min, local_x_max = symb_model.discretizator.KSI.getPartitionMinAndMax(ksi)
+        obstacle_overlap = (local_x_min[0] <= 7 and local_x_max[0] >= 3 and
+                            local_x_min[1] <= 7 and local_x_max[1] >= 3)
+        if obstacle_overlap:
+            Qs.add(ksi)
+
+    #s = ReachabilityController(symb_model, Qs)
+    # print(len(s.R_list[-1]))
+    s = ReachabilityController.load_model("ReachabilityController3D_3x7_3x7.ctl")
+    #s.save_controller("ReachabilityController3D_3x7_3x7.ctl")
+
+    print(s.R_star)
+
+    c = ConcreteModel(continuous_sys, s)
+
+    c.construct_trajectory(generate_random_w(symb_model), generate_random_x(s.R_star, symb_model))
+
+    plot_trajectory(c.trajectories.values(), ['red'], {((3, 3), (7, 7)): ['green', 'lightgreen']})
+
+    """Qs1 = set()
+    for i in range(20, 41):
+        for j in range(20, 41):
+            for k in range(0, 10):
+                Qs1.add(k * 100 + i * 10 + j)
+    s = SafetyController(symb_model, Qs1)"""
+
+
 
     #SafetyTest(symb_model).test_set3()
-    ReachabilityTest(symb_model).test_set1()
-    #SpecificationTest(symb_model).test_n_perturbation(50)
+    #ReachabilityTest(symb_model).test_set1()
+    #SpecificationTest(symb_model).test_1_2()

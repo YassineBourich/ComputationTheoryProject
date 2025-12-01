@@ -4,23 +4,27 @@ from SymbolicControllers.SymbolicController import SymbolicController
 
 class AutomatonBasedController(SymbolicController):
     def __init__(self, Automaton, symb_model):
+        print("Constructing specification automaton controller...")
         self.A = Automaton
         self.symb_model = symb_model
 
         self.h1 = self.construct_controller_h1()
         self.h2, self.Q0 = self.construct_controller_h2()
+        print("Constructing specification automaton controller: DONE")
 
     # method to construct h1 using the automaton transition function
     def construct_controller_h1(self):
+        print("h1 construction...")
         h1 = {}
-        for ksi in range(self.symb_model.num_of_sym_states + 1):
+        for ksi in self.symb_model.getAllStates():
             for psi in self.A.Q:
                 h1[(psi, ksi)] = self.A.delta[(psi, self.A.l(ksi))]
-
+        print("h1 construction: DONE")
         return h1
 
     # method to construct h2 using the mutated model g_tield and the reachability controller
     def construct_controller_h2(self):
+        print("h2 construction...")
         # Calculating the mutated model g_tield
         mutated_symb_model = MutatedSymbolicModel(self.symb_model, self.A, self.h1)
         # Calculating the reachable states PSI_f x KSI
@@ -33,9 +37,10 @@ class AutomatonBasedController(SymbolicController):
         Q0_tield = mutated_reachability_controller.R_list[-1]
         h_tield = mutated_reachability_controller.h
 
+        print("Resolving Q0...")
         # Constructing the set Q0 and returning the results
         Q0 = set()
-        for ksi in range(self.symb_model.num_of_sym_states + 1):
+        for ksi in self.symb_model.getAllStates():
             if (self.h1[(self.A.q0, ksi)], ksi) in Q0_tield:
                 Q0.add(ksi)
 
@@ -43,7 +48,7 @@ class AutomatonBasedController(SymbolicController):
 
     def final_product_states(self):
         final_reachable_states = set()
-        for ksi in range(self.symb_model.num_of_sym_states + 1):
+        for ksi in self.symb_model.getAllStates():
             for psi in self.A.F:
                 ksi_tield_f = (psi, ksi)
                 final_reachable_states.add(ksi_tield_f)
@@ -52,7 +57,7 @@ class AutomatonBasedController(SymbolicController):
 
     def initial_product_states(self):
         initial_product_states = set()
-        for ksi in range(self.symb_model.num_of_sym_states + 1):
+        for ksi in self.symb_model.getAllStates():
             psi_0 = self.A.q0
             ksi_tield_f = (psi_0, ksi)
             initial_product_states.add(ksi_tield_f)

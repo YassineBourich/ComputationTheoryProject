@@ -2,6 +2,9 @@ from Discretization.Discretizator import Discretizator
 from Reachability.ReachabilityMethods import ReachabilityMethods
 from ProjectMath.Math import vect_all_lte
 import pickle
+from tqdm import tqdm
+from math import pi
+import numpy as np
 
 class SymbolicModel:
     def __init__(self, continuous_model, reachability, reachability_method: ReachabilityMethods, Nx, Nu):
@@ -14,8 +17,8 @@ class SymbolicModel:
             self.Nx, self.Nu
         )
 
-        self.num_of_sym_states = self.discretizator.KSI.num_of_sym_states
-        self.num_of_commands = self.discretizator.SIGMA.num_of_commands
+        self.symb_states = self.discretizator.KSI.getAllStates()
+        self.symb_commands = self.discretizator.SIGMA.getAllCommands()
 
         self.reachability = reachability
         self.reachability_method = reachability_method
@@ -32,27 +35,55 @@ class SymbolicModel:
             r_m = self.reachability.reachable_interval_Bounds
 
         # Calculating the symbolic for ksi = 0
-        all_states = self.discretizator.KSI.getAllStates()
+        """all_states = self.discretizator.KSI.getAllStates()
         for sigma in range(1, self.num_of_commands + 1):
-            model[(0, sigma)] = all_states
+            model[(0, sigma)] = all_states"""
 
         # Calculating the symbolic model for each symbolic state and command
-        for ksi in range(1, self.num_of_sym_states + 1):
+        bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"
+        for ksi in tqdm(self.symb_states, bar_format=bar_format, ncols=80):
             x_min, x_max = self.discretizator.getPartitionMinAndMax(ksi)
-            for sigma in range(1, self.num_of_commands + 1):
+            for sigma in self.symb_commands:
                 u = self.discretizator.p(sigma)
                 f_min, f_max = r_m(x_min, x_max, u, self.continuous_model.getW()[0], self.continuous_model.getW()[1])
 
-                # Constructing the model for every pair (ksi, sigma) by returning the set
-                # of successor states
-                model[(ksi, sigma)] = self.getSetOfSuccessors(f_min, f_max, ksi, sigma)
+                # resolving the states qmin and qmax from f_min and f_max
+                if self.continuous_model.get_dim_x() == 3:
+                    if f_min[2] < -pi:
+                        f_min[2] += 2 * pi
+                    if f_max[2] < -pi:
+                        f_max[2] += 2 * pi
+                    if f_min[2] > pi:
+                        f_min[2] -= 2 * pi
+                    if f_max[2] > pi:
+                        f_max[2] -= 2 * pi
 
-        print("Symbolic model constructed.")
+                self.correct_reach_f(f_min, f_max)
+
+                if not vect_all_lte(f_min, f_max):
+                    print(f"Fatal: fmin={f_min}, fmax={f_max}")
+
+                include_x0 = 0
+                if (not vect_all_lte(f_min, self.continuous_model.getX()[1])) or (not vect_all_lte(self.continuous_model.getX()[0], f_max)):
+                    include_x0 = 2
+
+                if include_x0 != 2:
+                    if (not vect_all_lte(f_max, self.continuous_model.getX()[1])) or (not vect_all_lte(self.continuous_model.getX()[0], f_min)):
+                        f_min, f_max = self.crop_reachable_area(f_min, f_max)
+                        include_x0 = 1
+
+                q_min = self.discretizator.q(f_min)
+                q_max = self.discretizator.q(f_max)
+                # Constructing the model for every pair (ksi, sigma) by stocking the delimiter states
+                model[(ksi, sigma)] = (q_min, q_max)#self.getSetOfSuccessors(f_min, f_max, ksi, sigma)
+
+        print("Symbolic model constructed: DONE")
         return model
 
     # Method that return the set of successor states, which are partitions that intersect
     # with the region f_min, f_max
     def getSetOfSuccessors(self, f_min, f_max, ksi, sigma):
+        print("Resolving successors of (" + str(ksi) + ", " + str(sigma) + ")...")
         include_x0 = 0
         # If the reachable region is totally out of grid
         if (not vect_all_lte(f_min, self.discretizator.KSI.getV_max())) or (not vect_all_lte(self.discretizator.KSI.getV_min(), f_max)):
@@ -89,41 +120,70 @@ class SymbolicModel:
 
     # method to crop the reachable area
     def crop_reachable_area(self, f_min, f_max):
-        for i in range(self.discretizator.KSI.getDimV()):
-            quarter_partition_width = ((self.discretizator.KSI.getV_max()[i] - self.discretizator.KSI.getV_min()[i]) / self.discretizator.KSI.getNv()[i]) * 1/4
-            if f_max[i] >= self.discretizator.KSI.getV_max()[i]:
-                f_max[i] = self.discretizator.KSI.getV_max()[i] - quarter_partition_width
-            if f_min[i] <= self.discretizator.KSI.getV_min()[i]:
-                f_min[i] = self.discretizator.KSI.getV_min()[i]
+        for i in range(self.continuous_model.get_dim_x()):
+            quarter_partition_width = ((self.continuous_model.getX()[1][i] - self.continuous_model.getX()[0][i]) / self.Nx[i]) * 1/4
+            if f_max[i] >= self.continuous_model.getX()[1][i]:
+                f_max[i] = self.continuous_model.getX()[1][i] - quarter_partition_width
+            if f_min[i] <= self.continuous_model.getX()[0][i]:
+                f_min[i] = self.continuous_model.getX()[0][i]
         return f_min, f_max
+
+    # Correcting the positions f_min and f_max delimiting the hyper rectangle
+    def correct_reach_f(self, f_min, f_max):
+        for i in range(self.continuous_model.get_dim_x()):
+            if f_min[i] > f_max[i]:
+                f_min[i], f_max[i] = f_max[i], f_min[i]
 
     # method to get predecessors of a set of states
     def Pre(self, R: set):
+        R_grid = self.construct_R_grid(R)
+
         predecessors = set()
-        for ksi in range(0, self.num_of_sym_states + 1):
-            if self.exists_sigma_st_ksi_is_pre(ksi, R):
+        bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"
+        for ksi in tqdm(self.symb_states, bar_format=bar_format, ncols=80):
+            if self.exists_sigma_st_ksi_is_pre(ksi, R_grid):
                 predecessors.add(ksi)
 
         return predecessors
 
     # method to check if there is a command such that g(ksi, sigma) is in R (such that ksi
     # is a predecessor)
-    def exists_sigma_st_ksi_is_pre(self, ksi: int, R: set):
-        for sigma in range(1, self.num_of_commands + 1):
-            if self.g[(ksi, sigma)] and self.g[(ksi, sigma)].issubset(R):
-                return True
+    def exists_sigma_st_ksi_is_pre(self, ksi: int, R_grid):
+        for sigma in self.symb_commands:
+            if (ksi, sigma) in self.g:
+                q_min, q_max = self.g[(ksi, sigma)]
+                if self.rectangle_in_R(q_min, q_max, R_grid):
+                    return True
         return False
 
     # method to return the all commands such that g(ksi, sigma) is in R
-    def sigma_st_g_ksi_sigma_is_in_R(self, ksi: int, R: set):
+    def sigma_st_g_ksi_sigma_is_in_R(self, ksi: int, R_grid):
         sigma_set = set()
-        for sigma in range(1, self.num_of_commands + 1):
-            if self.g[(ksi, sigma)] and self.g[(ksi, sigma)].issubset(R):
-                sigma_set.add(sigma)
+        for sigma in self.symb_commands:
+            if (ksi, sigma) in self.g:
+                q_min, q_max = self.g[(ksi, sigma)]
+                if self.rectangle_in_R(q_min, q_max, R_grid):
+                    sigma_set.add(sigma)
         return sigma_set
 
+    def construct_R_grid(self, R: set):
+        R_grid = np.zeros([self.Nx[i] + 1 for i in range(self.continuous_model.get_dim_x())], dtype=bool)
+        for v in R:
+            R_grid[v] = True
+
+        return R_grid
+
+    def rectangle_in_R(self, q_min, q_max, R_grid):
+        # Build slice for each dimension
+        slices = tuple(slice(a, b + 1) for a, b in zip(q_min, q_max))
+        # Check if all states in rectangle are in R
+        return R_grid[slices].all()
+
     def getAllStates(self):
-        return self.discretizator.KSI.getAllStates()
+        return self.symb_states
+
+    def getAllCommands(self):
+        return self.symb_commands
 
     def save_model(self, filename):
         try:

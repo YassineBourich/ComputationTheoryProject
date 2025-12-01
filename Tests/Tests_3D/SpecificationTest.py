@@ -1,5 +1,5 @@
 from SymbolicControllers.AutomatonBasedController import AutomatonBasedController
-from SpecificationAutomata.ExampleSpecification_2D import ExampleSpecification2D
+from SpecificationAutomata.ExampleSpecification_3D import ExampleSpecification3D
 from Concretization.ConcreteModel import ConcreteModel
 from Visualization.PlotingUtility import plot_trajectory
 from ..RandomXGenerator import generate_random_x, generate_random_w
@@ -8,16 +8,14 @@ class SpecificationTest:
     def __init__(self, symb_model):
         self.symb_model = symb_model
 
-        self.specification_automaton = ExampleSpecification2D(self.symb_model)
+        self.specification_automaton = ExampleSpecification3D(self.symb_model)
 
     def get_concrete_model(self, specification_automaton):
         print("\t\u2022Defining Safety domain...")
 
         print("\t\u2022Specification automaton defined.")
 
-        print("\t\u2022Constructing specification automaton controller...")
         automaton_controller = AutomatonBasedController(specification_automaton, self.symb_model)
-        print("\t\u2022Safety controller constructed.")
         concrete_model = ConcreteModel(self.symb_model.continuous_model, automaton_controller)
         print("\t\u2022Concrete model defined.")
 
@@ -70,19 +68,19 @@ class SpecificationTest:
     def test_1_1(self, concrete_model=None, Q0=None, regions=None, traj_color='red'):
         if regions is None: regions = self.specification_automaton.Regions
 
-        self.run_single_test("Test 1_1", [0.0, 0.0] , self.specification_automaton,
+        self.run_single_test("Test 1_1", [0.0, 0.0, 0.0] , self.specification_automaton,
                              concrete_model, Q0, traj_color, regions)
 
     def test_1_2(self, concrete_model=None, Q0=None, regions=None, traj_color='red'):
         if regions is None: regions = self.specification_automaton.Regions
 
-        self.run_single_test("Test 1_2", [0.017, -0.035], self.specification_automaton,
+        self.run_single_test("Test 1_2", [0.017, -0.035, 0.02], self.specification_automaton,
                              concrete_model, Q0, traj_color, regions)
 
     def test_1_3(self, concrete_model=None, Q0=None, regions=None, traj_color='red'):
         if regions is None: regions = self.specification_automaton.Regions
 
-        self.run_single_test("Test 1_3", [-0.02, -0.04], self.specification_automaton,
+        self.run_single_test("Test 1_3", [-0.02, 0.0, -0.04], self.specification_automaton,
                              concrete_model, Q0, traj_color, regions)
 
     # __________________________________________n perturbation sample Test_____________________________________________

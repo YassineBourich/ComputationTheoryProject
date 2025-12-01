@@ -33,9 +33,7 @@ class SafetyTest:
 
         print("\t\u2022Safety domain defined: " + Qs_domain + ".")
 
-        print("\t\u2022Constructing Safety controller")
         safety_controller = SafetyController(self.symb_model, Qs)
-        print("\t\u2022Safety controller constructed.")
         concrete_model = ConcreteModel(self.symb_model.continuous_model, safety_controller)
         print("\t\u2022Concrete model defined.")
 

@@ -8,9 +8,10 @@ class ReachabilityTest:
         self.symb_model = symb_model
 
         self.Qa1 = set()
-        for i in range(20, 41):
-            for j in range(20, 41):
-                self.Qa1.add(i * 100 + j)  # vect_min = [2, 2], and vect_max = [4, 4]
+        for i in range(2, 5):
+            for j in range(2, 5):
+                for k in range(0, 10):
+                    self.Qa1.add(k * 100 + i * 10 + j)  # vect_min = [2, 2], and vect_max = [4, 4]
 
         # Define Qa domain [0,2]x[0,2]
         self.Qa2 = set()
@@ -33,13 +34,12 @@ class ReachabilityTest:
 
         print("\t\u2022Reachability domain defined: " + Qa_domain + ".")
 
-        print("\t\u2022Constructing Reachability controller...")
         reachability_controller = ReachabilityController(self.symb_model, Qa)
-        print("\t\u2022Safety controller constructed.")
         concrete_model = ConcreteModel(self.symb_model.continuous_model, reachability_controller)
         print("\t\u2022Concrete model defined.")
 
         print(reachability_controller.R_list[-1])
+        print(len(reachability_controller.R_list[-1]))
 
         return concrete_model, reachability_controller.R_list[-1]
 
@@ -92,21 +92,21 @@ class ReachabilityTest:
         if regions is None: regions = {((2, 2), (4, 4)): ['green', 'lightgreen']}
 
         self.run_single_test("Test 1_1", self.Qa1,
-                             "[2, 4]x[2, 4]", [0.0, 0.0],
+                             "[2, 4]x[2, 4]", [0.0, 0.0, 0.0],
                              concrete_model, R_star, traj_color, regions)
 
     def test_1_2(self, concrete_model=None, R_star=None, regions=None, traj_color='red'):
         if regions is None: regions = {((2, 2), (4, 4)): ['green', 'lightgreen']}
 
         self.run_single_test("Test 1_2", self.Qa1,
-                             "[2, 4]x[2, 4]", [0.017, -0.035],
+                             "[2, 4]x[2, 4]", [0.017, -0.035, 0.02],
                              concrete_model, R_star, traj_color, regions)
 
     def test_1_3(self, concrete_model=None, R_star=None, regions=None, traj_color='red'):
         if regions is None: regions = {((2, 2), (4, 4)): ['green', 'lightgreen']}
 
         self.run_single_test("Test 1_3", self.Qa1,
-                             "[2, 4]x[2, 4]", [-0.02, -0.04],
+                             "[2, 4]x[2, 4]", [-0.02, 0.0, -0.04],
                              concrete_model, R_star, traj_color, regions)
 
     # __________________________________________Test Set2_____________________________________________
@@ -137,21 +137,21 @@ class ReachabilityTest:
         if regions is None: regions = {((0, 0), (2, 2)): ['green', 'lightgreen']}
 
         self.run_single_test("Test 2_1", self.Qa2,
-                             "[0, 2]x[0, 2]", [0.0, 0.0],
+                             "[0, 2]x[0, 2]", [0.0, 0.0, 0.0],
                              concrete_model, R_star, traj_color, regions)
 
     def test_2_2(self, concrete_model=None, R_star=None, regions=None, traj_color='red'):
         if regions is None: regions = {((0, 0), (2, 2)): ['green', 'lightgreen']}
 
         self.run_single_test("Test 2_2", self.Qa2,
-                             "[0, 2]x[0, 2]", [0.015, 0.02],
+                             "[0, 2]x[0, 2]", [0.015, -0.01, 0.02],
                              concrete_model, R_star, traj_color, regions)
 
     def test_2_3(self, concrete_model=None, R_star=None, regions=None, traj_color='red'):
         if regions is None: regions = {((0, 0), (2, 2)): ['green', 'lightgreen']}
 
         self.run_single_test("Test 2_3", self.Qa2,
-                             "[0, 2]x[0, 2]", [-0.025, -0.01],
+                             "[0, 2]x[0, 2]", [0.0, -0.025, -0.01],
                              concrete_model, R_star, traj_color, regions)
 
     # __________________________________________Test Set3_____________________________________________
@@ -185,7 +185,7 @@ class ReachabilityTest:
                             }
 
         self.run_single_test("Test 3_1", self.Qa3,
-                             "[4, 6]x[4, 6]", [0.0, 0.0],
+                             "[4, 6]x[4, 6]", [0.0, 0.0, 0.0],
                              concrete_model, R_star, traj_color, regions)
 
     def test_3_2(self, concrete_model=None, R_star=None, regions=None, traj_color='red'):
@@ -195,7 +195,7 @@ class ReachabilityTest:
                             }
 
         self.run_single_test("Test 3_1", self.Qa3,
-                             "[4, 6]x[4, 6]", [0.02, -0.015],
+                             "[4, 6]x[4, 6]", [0.02, 0.01, -0.015],
                              concrete_model, R_star, traj_color, regions)
 
     def test_3_3(self, concrete_model=None, R_star=None, regions=None, traj_color='red'):
@@ -205,6 +205,6 @@ class ReachabilityTest:
                             }
 
         self.run_single_test("Test 3_1", self.Qa3,
-                             "[4, 6]x[4, 6]", [-0.03, 0.01],
+                             "[4, 6]x[4, 6]", [-0.03, 0.01, -0.01],
                              concrete_model, R_star, traj_color, regions)
 
