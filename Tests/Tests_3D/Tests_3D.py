@@ -1,3 +1,5 @@
+from SpecificationAutomata.Automaton import Automaton
+from SymbolicControllers.AutomatonBasedController import AutomatonBasedController
 from SymbolicModels.SymbolicModel import SymbolicModel
 from Reachability.ReachabilityMethods import ReachabilityMethods
 from Reachability.Reachability import Reachability
@@ -10,6 +12,7 @@ from SymbolicControllers.SafetyController import SafetyController
 from Tests.RandomXGenerator import *
 from Concretization.ConcreteModel import ConcreteModel
 from SymbolicControllers.ReachabilityController import ReachabilityController
+from SpecificationAutomata.ExampleSpecification_3D import ExampleSpecification3D
 from Visualization.PlotingUtility import plot_trajectory
 
 tau = 1
@@ -49,12 +52,12 @@ def Test3DModel():
     # Constructing the Symbolic model
     Nx = [100, 100, 30]
     Nu = [3, 5]
-    #symb_model = SymbolicModel(continuous_sys, reachability, reachability_method, Nx , Nu)
-    symb_model = SymbolicModel.load_model("SymbolicModel3D_2.mdl")
+    symb_model = SymbolicModel(continuous_sys, reachability, reachability_method, Nx , Nu)
+    #symb_model = SymbolicModel.load_model("SymbolicModel3D_2.mdl")
 
     #print(symb_model.g)
     print(symb_model.continuous_model)
-    #symb_model.save_model("SymbolicModel3D_2.mdl")
+    symb_model.save_model("SymbolicModel3D_0.mdl")
 
     Qs = set()
     for ksi in symb_model.getAllStates():
@@ -66,16 +69,20 @@ def Test3DModel():
 
     #s = ReachabilityController(symb_model, Qs)
     # print(len(s.R_list[-1]))
-    s = ReachabilityController.load_model("ReachabilityController3D_3x7_3x7.ctl")
+    #s = ReachabilityController.load_model("ReachabilityController3D_3x7_3x7.ctl")
     #s.save_controller("ReachabilityController3D_3x7_3x7.ctl")
 
-    print(s.R_star)
+
+    A = ExampleSpecification3D(symb_model)
+
+    s = AutomatonBasedController(A, symb_model)
+    s.symb_model("SpecificationController3D_0.ctl")
 
     c = ConcreteModel(continuous_sys, s)
 
-    c.construct_trajectory(generate_random_w(symb_model), generate_random_x(s.R_star, symb_model))
+    c.construct_trajectory(generate_random_w(symb_model), generate_random_x(s.Q0, symb_model))
 
-    plot_trajectory(c.trajectories.values(), ['red'], {((3, 3), (7, 7)): ['green', 'lightgreen']})
+    plot_trajectory(c.trajectories.values(), ['red'], A.Regions)#{((3, 3), (7, 7)): ['green', 'lightgreen']})
 
     """Qs1 = set()
     for i in range(20, 41):
