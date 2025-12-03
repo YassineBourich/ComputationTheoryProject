@@ -1,4 +1,4 @@
-from ProjectMath.Math import vec_add, vec_mul_scalar
+from UtilityFunctions.Math import vec_add, vec_mul_scalar
 from .ContinuousSystem import ContinuousSystem
 
 class ContinuousModel2D(ContinuousSystem):

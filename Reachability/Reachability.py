@@ -1,4 +1,4 @@
-from ProjectMath.Math import vec_add, vec_sub, vec_mul_scalar, mat_vec_mul, vec_abs
+from UtilityFunctions.Math import vec_add, vec_sub, vec_mul_scalar, mat_vec_mul, vec_abs
 
 
 class Reachability:

@@ -2,68 +2,65 @@ from SpecificationAutomata.Automaton import Automaton
 from UtilityFunctions.Math import vect_all_lte
 
 
-class ExampleSpecification2D(Automaton):
+class ExampleSpecification2D_2(Automaton):
     def __init__(self, symb_model):
         self.symb_model = symb_model
 
         self.Regions = {
-            ((4, 8.5), (5, 9.5)): ['green', 'lightgreen'],
-            ((8.5, 2), (9.5, 3)): ['blue', 'lightblue'],
-            ((2, 0.5), (3, 1.5)): ['gold', 'yellow'],
-            ((3, 3), (7, 7)): ['orangered', 'lightsalmon'],
+            ((0.5, 0.5), (1.5, 1.5)): ['green', 'lightgreen'],
+            ((6.5, 2.5), (7.5, 4)): ['blue', 'lightblue'],
+            ((0, 6), (2, 7.5)): ['gold', 'yellow'],
+            ((8, 8), (10, 10)): ['orangered', 'lightsalmon'],
         }
 
-        Q = {'a', 'b', 'c', 'd', 'e'}
+        Q = {'a', 'b', 'c', 'd', 'e', 'f'}
         SIGMA = {0, 1, 2, 3, 4}
         delta = self.transitions_function()
         q0 = 'a'
-        F = {'d'}
+        F = {'e'}
         super().__init__(Q, SIGMA, delta, q0, F)
 
     def transitions_function(self):
         return {
             ('a', 0): 'a',
             ('a', 1): 'b',
-            ('a', 2): 'c',
-            ('a', 3): 'a',
-            ('a', 4): 'e',
+            ('a', 2): 'f',
+            ('a', 3): 'f',
+            ('a', 4): 'f',
 
             ('b', 0): 'b',
             ('b', 1): 'b',
-            ('b', 2): 'e',
-            ('b', 3): 'd',
-            ('b', 4): 'e',
+            ('b', 2): 'c',
+            ('b', 3): 'f',
+            ('b', 4): 'f',
 
             ('c', 0): 'c',
-            ('c', 1): 'e',
+            ('c', 1): 'f',
             ('c', 2): 'c',
             ('c', 3): 'd',
-            ('c', 4): 'e',
+            ('c', 4): 'f',
 
             ('d', 0): 'd',
-            ('d', 1): 'd',
-            ('d', 2): 'd',
+            ('d', 1): 'f',
+            ('d', 2): 'f',
             ('d', 3): 'd',
-            ('d', 4): 'd',
+            ('d', 4): 'e',
 
             ('e', 0): 'e',
             ('e', 1): 'e',
             ('e', 2): 'e',
             ('e', 3): 'e',
             ('e', 4): 'e',
+
+            ('f', 0): 'f',
+            ('f', 1): 'f',
+            ('f', 2): 'f',
+            ('f', 3): 'f',
+            ('f', 4): 'f',
         }
 
     def l(self, ksi):
-        # Label for the "outside grid" / non-admissible symbolic state.
-        # Depending on the discretization, symbolic states are represented
-        # either as a single integer index or as a tuple of indices.
-        if isinstance(ksi, int):
-            if ksi == 0:
-                return 4
-        else:
-            # Tuple representation: all-zero index corresponds to "out of grid"
-            if all(c == 0 for c in ksi):
-                return 4
+        if ksi == (0,) * self.symb_model.continuous_model.get_dim_x(): return 4
 
         x_min, x_max = self.symb_model.discretizator.KSI.getPartitionMinAndMax(ksi)
 

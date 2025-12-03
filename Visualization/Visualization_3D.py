@@ -14,7 +14,7 @@ base_colors = [[0.5, 1.0, 0.5, 0.8], [0.5, 0.8, 1.0, 0.8], [1.0, 0.7, 0.8, 0.8],
 def visualize_trajectory(specification, trajectory, speed=0.2):
     client = p.connect(p.GUI)
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
-    p.resetDebugVisualizerCamera(cameraDistance=15, cameraYaw=45, cameraPitch=-30, cameraTargetPosition=[5, 5, 0])
+    p.resetDebugVisualizerCamera(cameraDistance=10, cameraYaw=0, cameraPitch=-80, cameraTargetPosition=[5, 2, 0])
     p.setGravity(0, 0, -10)
 
     floor_shape = p.createCollisionShape(p.GEOM_BOX, halfExtents=[20, 20, 0.1])
@@ -40,8 +40,7 @@ def visualize_trajectory(specification, trajectory, speed=0.2):
     robot = p.createMultiBody(baseMass=1.0, baseCollisionShapeIndex=cs, baseVisualShapeIndex=vs,
                               basePosition=[trajectory[0][0], trajectory[0][1], 0.15], baseOrientation=[0, 0, 0, 1])
 
-    input("Press ENTER to start...")
-    step, dt = 0, 0.03 / speed
+    step, dt = 0, 0.003 / speed
     while step < len(trajectory) and p.isConnected():
         x, y = trajectory[step]
         yaw = math.atan2(trajectory[step + 1][1] - y, trajectory[step + 1][0] - x) if step < len(trajectory) - 1 else 0

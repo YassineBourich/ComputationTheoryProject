@@ -2,32 +2,30 @@ from SymbolicControllers.ReachabilityController import ReachabilityController
 from Concretization.ConcreteModel import ConcreteModel
 from Visualization.PlotingUtility import plot_trajectory
 from ..RandomXGenerator import generate_random_x
+from Tests.state_region_utils import states_in_box
+from math import pi
 
 class ReachabilityTest:
     def __init__(self, symb_model):
         self.symb_model = symb_model
 
-        self.Qa1 = set()
-        for i in range(2, 5):
-            for j in range(2, 5):
-                for k in range(0, 10):
-                    self.Qa1.add(k * 100 + i * 10 + j)  # vect_min = [2, 2], and vect_max = [4, 4]
+        theta_bounds = (-pi, pi)
 
-        # Define Qa domain [0,2]x[0,2]
-        self.Qa2 = set()
-        for i in range(0, 21):
-            for j in range(1, 21):
-                self.Qa2.add(i * 100 + j)
+        self.Qa1 = states_in_box(
+            self.symb_model, (2.0, 2.0, theta_bounds[0]), (4.0, 4.0, theta_bounds[1]), contain=True
+        )
 
-        # Qa domain [4,6]x[4,6]
-        self.Qa3 = set()
-        for i in range(40, 61):
-            for j in range(40, 61):
-                self.Qa3.add(i * 100 + j)
+        self.Qa2 = states_in_box(
+            self.symb_model, (0.0, 0.0, theta_bounds[0]), (2.0, 2.0, theta_bounds[1]), contain=True
+        )
 
-        for i in range(70, 81):
-            for j in range(80, 101):
-                self.Qa3.add(i * 100 + j)
+        Qa3_region_1 = states_in_box(
+            self.symb_model, (4.0, 4.0, theta_bounds[0]), (6.0, 6.0, theta_bounds[1]), contain=True
+        )
+        Qa3_region_2 = states_in_box(
+            self.symb_model, (7.0, 8.0, theta_bounds[0]), (10.0, 10.0, theta_bounds[1]), contain=True
+        )
+        self.Qa3 = Qa3_region_1.union(Qa3_region_2)
 
     def get_concrete_model(self, Qa, Qa_domain):
         print("\t\u2022Defining Safety domain...")

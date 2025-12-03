@@ -1,5 +1,5 @@
 from SpecificationAutomata.Automaton import Automaton
-from ProjectMath.Math import vect_all_lte
+from UtilityFunctions.Math import vect_all_lte
 from math import pi
 
 
@@ -8,11 +8,16 @@ class ExampleSpecification3D(Automaton):
         self.symb_model = symb_model
 
         self.Regions = {
-            ((4, 8.5, (-1) * pi), (5, 9.5, pi)): ['green', 'lightgreen'],
+            ((4, 7.5, (-1) * pi), (7, 9.9, pi)): ['green', 'lightgreen'],
+            ((7.5, 0.5, (-1) * pi), (9.8, 3.5, pi)): ['blue', 'lightblue'],
+            ((0.5, 0.5, (-1) * pi), (4, 4, pi)): ['gold', 'yellow'],
+            ((5, 5, (-1) * pi), (7, 7, pi)): ['orangered', 'lightsalmon'],
+        }
+        """((4, 8.5, (-1) * pi), (5, 9.5, pi)): ['green', 'lightgreen'],
             ((8.5, 2, (-1) * pi), (9.5, 3, pi)): ['blue', 'lightblue'],
             ((2, 0.5, (-1) * pi), (3, 1.5, pi)): ['gold', 'yellow'],
             ((3, 3, (-1) * pi), (7, 7, pi)): ['orangered', 'lightsalmon'],
-        }
+        }"""
 
         Q = {'a', 'b', 'c', 'd', 'e'}
         SIGMA = {0, 1, 2, 3, 4}
@@ -55,7 +60,11 @@ class ExampleSpecification3D(Automaton):
         }
 
     def l(self, ksi):
-        if ksi == 0: return 4
+        # Label for the "outside grid" / non-admissible symbolic state.
+        # Depending on the discretization, symbolic states are represented
+        # either as a single integer index or as a tuple of indices.
+        if all(c == 0 for c in ksi):
+            return 4
 
         x_min, x_max = self.symb_model.discretizator.KSI.getPartitionMinAndMax(ksi)
 

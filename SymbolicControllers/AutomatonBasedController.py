@@ -65,6 +65,7 @@ class AutomatonBasedController(SymbolicController):
         return initial_product_states
 
     def isSpecificationAchieved(self, psi, x):
-        ksi_tield = (psi, self.symb_model.discretizator.KSI.q(x))
+        ksi = self.symb_model.discretizator.KSI.q(x)
+        ksi_tield = (self.h1[(psi, ksi)], ksi)
 
         return ksi_tield in self.final_product_states()

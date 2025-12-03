@@ -1,6 +1,6 @@
 from SymbolicControllers.SymbolicController import SymbolicController
 import random
-import numpy as np
+from UtilityFunctions.NumpyGrid import construct_R_grid, construct_R_dictionary, construct_compatibility_grids
 from tqdm import tqdm
 
 from SymbolicModels.MutatedSymbolicModel import MutatedSymbolicModel
@@ -16,6 +16,10 @@ class ReachabilityController(SymbolicController):
         self.h = self.construct_controller()
         print("Constructing the reachability controller: DONE")
 
+    """
+    Method to calculate the safety domain (R*) using the fixed point algorithm for reachability.
+    In this case we store all the Rk's in the R_list
+    """
     def getReachabilityDomain(self):
         print("Constructing the reachability domain...")
         k = 0
@@ -31,22 +35,27 @@ class ReachabilityController(SymbolicController):
 
         return R_list
 
+    """
+    Constructing the controller function by choosing a random sigma that satisfies
+    staying in the safe domain. We use R_star_grip (a numpy grid) for fast computation
+    """
     def construct_controller(self):
         print("Constructing the controller function...")
         h = {}
-        R_prime = None
         compat_grids = None
+        # Choose a deterministic default command that is always valid
+        default_sigma = next(iter(self.symb_model.getAllCommands()))
         bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"
         for k in range(len(self.R_list) - 1, 1, -1):
             print(f"iter {k}")
             if isinstance(self.symb_model, MutatedSymbolicModel):
-                R_prime = self.symb_model.construct_R_dictionary(self.R_list[k - 1])
-                R_grid_k = self.symb_model.construct_R_grid(set(R_prime.keys()))
-                compat_grids = self.symb_model.construct_compatibility_grids(R_prime)
+                R_prime = construct_R_dictionary(self.R_list[k - 1])
+                R_grid_k = construct_R_grid(self.symb_model.symb_model.Nx, set(R_prime.keys()))
+                compat_grids = construct_compatibility_grids(self.symb_model.symb_model.Nx, self.symb_model.Automaton.Q, self.symb_model.h1, R_prime)
             else:
-                R_grid_k = self.symb_model.construct_R_grid(self.R_list[k - 1])
+                R_grid_k = construct_R_grid(self.symb_model.Nx, self.R_list[k - 1])
 
-            for ksi in tqdm(self.R_list[k], bar_format=bar_format, ncols=50):
+            for ksi in tqdm(self.R_list[k], bar_format=bar_format, ncols=80):
                 if isinstance(self.symb_model, MutatedSymbolicModel):
                     sigmas = self.symb_model.sigma_st_g_ksi_sigma_is_in_R(ksi, compat_grids, R_grid_k)
                 else:
@@ -56,7 +65,7 @@ class ReachabilityController(SymbolicController):
 
         for ksi in self.symb_model.getAllStates():
             if ksi not in h:
-                h[ksi] = 1
+                h[ksi] = default_sigma
 
         return h
 

@@ -1,5 +1,5 @@
 from ProjectExceptions.Exceptions import DimensionError
-from ProjectMath.Math import PI
+from UtilityFunctions.Math import PI
 
 class DiscretSpace:
     def __init__(self, vect_min, vect_max, Nv):

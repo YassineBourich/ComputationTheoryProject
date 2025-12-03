@@ -2,28 +2,18 @@ from SymbolicControllers.SafetyController import SafetyController
 from Concretization.ConcreteModel import ConcreteModel
 from Visualization.PlotingUtility import plot_trajectory
 from ..RandomXGenerator import generate_random_x
+from Tests.state_region_utils import states_in_box, subtract_box
 
 class SafetyTest:
     def __init__(self, symb_model):
         self.symb_model = symb_model
 
-        self.Qs1 = set()
-        for i in range(20, 41):
-            for j in range(20, 41):
-                self.Qs1.add(i * 100 + j)  # vect_min = [2, 2], and vect_max = [4, 4]
+        self.Qs1 = states_in_box(self.symb_model, (2.0, 2.0), (4.0, 4.0), contain=True)
 
-        # Define Qs domain [0,2]x[0,2]
-        self.Qs2 = set()
-        for i in range(0, 21):
-            for j in range(0, 21):
-                self.Qs2.add(i * 100 + j)
+        self.Qs2 = states_in_box(self.symb_model, (0.0, 0.0), (2.0, 2.0), contain=True)
 
-        # Qs domain [4,6]x[4,6]
-        self.Qs3 = self.symb_model.discretizator.KSI.getAllStates()
-        for i in range(40, 61):
-            for j in range(40, 61):
-                self.Qs3.remove(i * 100 + j)
-        self.Qs3.remove(0)
+        self.Qs3 = set(self.symb_model.getAllStates())
+        self.Qs3 = subtract_box(self.Qs3, self.symb_model, (4.0, 4.0), (6.0, 6.0), contain=True)
 
     def get_concrete_model(self, Qs, Qs_domain):
         print("\t\u2022Defining Safety domain...")
@@ -36,7 +26,7 @@ class SafetyTest:
         concrete_model = ConcreteModel(self.symb_model.continuous_model, safety_controller)
         print("\t\u2022Concrete model defined.")
 
-        return concrete_model, safety_controller.R_list[-1]
+        return concrete_model, safety_controller.R_star
 
     def run_single_test(self, test_name, domain, domain_name, w, concrete_model=None, R_star=None, color=None, regions=None):
         this_is_an_independant_test = concrete_model is None
