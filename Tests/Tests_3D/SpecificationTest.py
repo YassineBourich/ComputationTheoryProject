@@ -37,7 +37,7 @@ class SpecificationTest:
 
     def run_tests(self):
         self.test_set1()
-        self.test_n_perturbation()
+        self.test_n_perturbation(50)
 
     # __________________________________________Test Set1_____________________________________________
 

@@ -82,7 +82,7 @@ def Test2DModel():
     c.construct_trajectory(generate_random_w(symb_model), generate_random_x(initial_states, symb_model))
 
     plot_trajectory(c.trajectories.values(), ['red'], Automaton.Regions)
-    #visualize_trajectory(Automaton, list(c.trajectories.values())[0])
+    visualize_trajectory(Automaton.Regions, list(c.trajectories.values())[0])
     """
     """
     controller_filename = "SpecificationController2D_1"
@@ -100,7 +100,7 @@ def Test2DModel():
     c.construct_trajectory(generate_random_w(symb_model), generate_random_x(initial_states, symb_model))
 
     plot_trajectory(c.trajectories.values(), ['red'], Automaton.Regions)
-    #visualize_trajectory(Automaton, list(c.trajectories.values())[0])
+    visualize_trajectory(Automaton.Regions, list(c.trajectories.values())[0])
     """
     """
     controller_filename = "SpecificationController2D_2"
@@ -118,7 +118,7 @@ def Test2DModel():
     c.construct_trajectory(generate_random_w(symb_model), generate_random_x(initial_states, symb_model))
 
     plot_trajectory(c.trajectories.values(), ['red'], Automaton.Regions)
-    #visualize_trajectory(Automaton, list(c.trajectories.values())[0])
+    visualize_trajectory(Automaton.Regions, list(c.trajectories.values())[0])
     """
     """
     # Testing Safety controller in the region [2, 5]x[6, 7]
@@ -134,6 +134,7 @@ def Test2DModel():
 
     c.construct_trajectory(generate_random_w(symb_model), generate_random_x(initial_states, symb_model))
     plot_trajectory(c.trajectories.values(), ['red'], region)
+    visualize_trajectory(region, list(c.trajectories.values())[0])
     """
     """
     # Testing Reachability controller in the region [2, 5]x[6, 7]
@@ -149,6 +150,7 @@ def Test2DModel():
 
     c.construct_trajectory(generate_random_w(symb_model), generate_random_x(initial_states, symb_model))
     plot_trajectory(c.trajectories.values(), ['red'], region)
+    visualize_trajectory(region, list(c.trajectories.values())[0])
     """
 
     # Specialized tests from the module Tests:

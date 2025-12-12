@@ -11,7 +11,7 @@ specification: ExampleSpecification_2D(model)
 
 base_colors = [[0.5, 1.0, 0.5, 0.8], [0.5, 0.8, 1.0, 0.8], [1.0, 0.7, 0.8, 0.8], [1.0, 0.4, 0.4, 0.9]]
 
-def visualize_trajectory(specification, trajectory, speed=0.2):
+def visualize_trajectory(Regions, trajectory, speed=0.02):
     client = p.connect(p.GUI)
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
     p.resetDebugVisualizerCamera(cameraDistance=10, cameraYaw=0, cameraPitch=-80, cameraTargetPosition=[5, 2, 0])
@@ -22,10 +22,10 @@ def visualize_trajectory(specification, trajectory, speed=0.2):
     p.createMultiBody(baseMass=0, baseCollisionShapeIndex=floor_shape, baseVisualShapeIndex=floor_visual,
                       basePosition=[5, 5, -0.1])
 
-    num_regions = len(specification.Regions.keys())
+    num_regions = len(Regions.keys())
     colors = {i: base_colors[i % len(base_colors)] for i in range(num_regions)}
 
-    for i, b in enumerate(specification.Regions):
+    for i, b in enumerate(Regions):
         x_min, y_min, x_max, y_max = b[0][0], b[0][1], b[1][0], b[1][1]
         w, h = (x_max - x_min) / 2, (y_max - y_min) / 2
         cx, cy = (x_min + x_max) / 2, (y_min + y_max) / 2

@@ -16,6 +16,7 @@ from Concretization.ConcreteModel import ConcreteModel
 from SymbolicControllers.ReachabilityController import ReachabilityController
 from SpecificationAutomata.ExampleSpecification_3D import ExampleSpecification3D
 from Visualization.PlotingUtility import plot_trajectory
+from Visualization.Visualization_3D import visualize_trajectory
 
 tau = 1
 def Dx(u):
@@ -54,7 +55,7 @@ def Test3DModel():
     # Constructing or loading the symbolic model (cache to speed up repeated runs)
     Nx = [50, 50, 15]
     Nu = [3, 5]
-    model_filename = "SymbolicModel3D_100x100x30"
+    model_filename = "SymbolicModel3D_50x50x15"
     if os.path.exists(model_filename + ".mdl"):
         symb_model = SymbolicModel.load_model(model_filename)
         print(f"Loaded symbolic model from '{model_filename}'.mdl.")
@@ -65,14 +66,14 @@ def Test3DModel():
 
 
     # You may try to test these blocks of code or try to run tests
-
-    controller_filename = "SpecificationController3D_100x100x30"
+    """
+    controller_filename = "SpecificationController3D_50x50x15"
     # Always (re)build the specification controller to ensure compatibility
     # with the current model and reachability implementation.
     Automaton = ExampleSpecification3D(symb_model)
-    s = AutomatonBasedController(Automaton, symb_model)
-    s.save_controller(controller_filename)
-    #s = AutomatonBasedController.load_controller(controller_filename)
+    #s = AutomatonBasedController(Automaton, symb_model)
+    #s.save_controller(controller_filename)
+    s = AutomatonBasedController.load_controller(controller_filename)
     print(f"Constructed and saved specification controller to '{controller_filename}'.")
 
     c = ConcreteModel(continuous_sys, s)
@@ -84,7 +85,8 @@ def Test3DModel():
     c.construct_trajectory(generate_random_w(symb_model), generate_random_x(initial_states, symb_model))
 
     plot_trajectory(c.trajectories.values(), ['red'], Automaton.Regions)
-
+    visualize_trajectory(Automaton.Regions, list(c.trajectories.values())[0])
+    """
     # Specialized tests from the module Tests:
 
     #SafetyTest(symb_model).run_tests()
