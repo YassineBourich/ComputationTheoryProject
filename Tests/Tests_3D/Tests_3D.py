@@ -52,9 +52,9 @@ def Test3DModel():
     print("Reachability method defined.")
 
     # Constructing or loading the symbolic model (cache to speed up repeated runs)
-    Nx = [100, 100, 30]
+    Nx = [50, 50, 15]
     Nu = [3, 5]
-    model_filename = "SymbolicModel3D_0"
+    model_filename = "SymbolicModel3D_100x100x30"
     if os.path.exists(model_filename + ".mdl"):
         symb_model = SymbolicModel.load_model(model_filename)
         print(f"Loaded symbolic model from '{model_filename}'.mdl.")
@@ -63,12 +63,14 @@ def Test3DModel():
         symb_model.save_model(model_filename)
         print(f"Constructed and saved symbolic model to '{model_filename}'.mdl.")
 
-    """
-    controller_filename = "SpecificationController3D_1.ctl"
+
+    # You may try to test these blocks of code or try to run tests
+
+    controller_filename = "SpecificationController3D_100x100x30"
     # Always (re)build the specification controller to ensure compatibility
     # with the current model and reachability implementation.
-    A = ExampleSpecification3D(symb_model)
-    s = AutomatonBasedController(A, symb_model)
+    Automaton = ExampleSpecification3D(symb_model)
+    s = AutomatonBasedController(Automaton, symb_model)
     s.save_controller(controller_filename)
     #s = AutomatonBasedController.load_controller(controller_filename)
     print(f"Constructed and saved specification controller to '{controller_filename}'.")
@@ -81,11 +83,10 @@ def Test3DModel():
     #initial_states = s.R_star
     c.construct_trajectory(generate_random_w(symb_model), generate_random_x(initial_states, symb_model))
 
-    plot_trajectory(c.trajectories.values(), ['red'], {((3, 3), (7, 7)): ['green', 'lightgreen']})
-    """
+    plot_trajectory(c.trajectories.values(), ['red'], Automaton.Regions)
 
-
+    # Specialized tests from the module Tests:
 
     #SafetyTest(symb_model).run_tests()
     #ReachabilityTest(symb_model).run_tests()
-    SpecificationTest(symb_model).test_n_perturbation(50)
+    #SpecificationTest(symb_model).test_n_perturbation(50)
